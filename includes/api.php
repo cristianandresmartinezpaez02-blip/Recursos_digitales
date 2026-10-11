@@ -6,6 +6,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/i18n.php';
 require_once __DIR__ . '/analisis.php';
+require_once __DIR__ . '/db.php'; // copia duradera de la caché (solo con PostgreSQL)
 
 const RANGOS_HISTORIAL = [1, 7, 30, 90, 365];
 
@@ -174,6 +175,44 @@ function velasBinance(string $par, string $intervalo, int $desdeMs): array
 }
 
 /**
+ * Copia de la caché en la base de datos (solo con PostgreSQL, es decir, en Render con Supabase).
+ * Se actualiza como mucho cada 10 minutos por dato para no cargar la base.
+ */
+function copiaDuradera(string $clave, string $json): void
+{
+    if (!esPostgres()) {
+        return;
+    }
+    $marca = DIR_CACHE . '/.copia_' . md5($clave);
+    if (is_file($marca) && time() - filemtime($marca) < 600) {
+        return;
+    }
+    try {
+        db()->prepare('INSERT INTO cache_datos (clave, contenido) VALUES (?, ?)
+                ON CONFLICT (clave) DO UPDATE SET contenido = excluded.contenido')->execute([$clave, $json]);
+        @touch($marca);
+    } catch (Throwable $e) {
+        error_log('copia de la caché en la base: ' . $e->getMessage());
+    }
+}
+
+function leerCopiaDuradera(string $clave): ?string
+{
+    if (!esPostgres()) {
+        return null;
+    }
+    try {
+        $st = db()->prepare('SELECT contenido FROM cache_datos WHERE clave = ?');
+        $st->execute([$clave]);
+        $copia = $st->fetchColumn();
+        return is_string($copia) ? $copia : null;
+    } catch (Throwable $e) {
+        error_log('leer copia de la caché: ' . $e->getMessage());
+        return null;
+    }
+}
+
+/**
  * Devuelve datos desde la caché en disco o los pide a la API.
  * Si la API falla sirve la caché vieja para que la página nunca quede vacía.
  * Un dato caducado con menos de $maxViejo segundos se entrega al instante y se renueva
@@ -191,13 +230,21 @@ function conCache(string $clave, int $ttl, callable $obtener, int $maxViejo = CA
         clearstatcache(true, $archivo);
         return is_file($archivo) ? json_decode(file_get_contents($archivo), true) : null;
     };
-    $guardar = function ($datos) use ($archivo) {
+    $guardar = function ($datos) use ($archivo, $clave) {
         $fecha = time();
-        file_put_contents($archivo, json_encode(['fecha' => $fecha, 'datos' => $datos]), LOCK_EX);
+        $json = json_encode(['fecha' => $fecha, 'datos' => $datos]);
+        file_put_contents($archivo, $json, LOCK_EX);
+        copiaDuradera($clave, $json);
         return $fecha;
     };
 
+    // Servidor recién arrancado (Render borra los archivos al reiniciar): se parte de la última
+    // copia guardada en la base, así la página tiene datos aunque CoinGecko esté limitando.
     $cache = $leer();
+    if (!$cache && ($copia = leerCopiaDuradera($clave)) !== null) {
+        @file_put_contents($archivo, $copia, LOCK_EX);
+        $cache = json_decode($copia, true);
+    }
     if ($cache && time() - $cache['fecha'] < $ttl) {
         return ['datos' => $cache['datos'], 'fecha' => $cache['fecha'], 'desde_cache' => true];
     }

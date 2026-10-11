@@ -79,7 +79,7 @@ function db(): PDO
         }
         try {
             $conexion = conexionPostgres($opciones);
-            crearTablas($conexion, 'esquema_pgsql.sql', DIR_DATA . '/.esquema_pgsql_v2'); // todo es "IF NOT EXISTS": repetirlo no hace daño
+            crearTablas($conexion, 'esquema_pgsql.sql', DIR_DATA . '/.esquema_pgsql_v3'); // todo es "IF NOT EXISTS": repetirlo no hace daño
         } catch (Throwable $e) {
             throw $fallo = $e;
         }

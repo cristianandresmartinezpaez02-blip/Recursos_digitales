@@ -12,3 +12,4 @@ data/uso_api.json
 data/.esquema_*
 config/config.local.php
 iniciar.bat
+data/cache/.copia_*

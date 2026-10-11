@@ -12,3 +12,4 @@ quizpy/venv/
 quizpy/*.db
 __pycache__/
 .vscode/
+data/cache/.copia_*

@@ -60,3 +60,9 @@ CREATE TABLE IF NOT EXISTS sesiones (
     expira  BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sesiones_expira ON sesiones (expira);
+
+-- v3: última copia buena de los datos de mercado (Render borra la caché en archivos al reiniciar).
+CREATE TABLE IF NOT EXISTS cache_datos (
+    clave      TEXT PRIMARY KEY,
+    contenido  TEXT NOT NULL
+);
