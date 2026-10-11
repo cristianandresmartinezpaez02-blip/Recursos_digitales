@@ -100,6 +100,8 @@ $inicial = $usuario ? mb_strtoupper(mb_substr($usuario['nombre'], 0, 1)) : '';
     <link rel="manifest" href="<?= BASE_URL ?>/manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Chart.js y otras librerías: la conexión al CDN se abre mientras se descarga la página -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <!-- Las fuentes se cargan sin bloquear el primer pintado de la página -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" media="print" onload="this.media=&#39;all&#39;">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"></noscript>

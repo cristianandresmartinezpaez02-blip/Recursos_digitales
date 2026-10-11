@@ -537,16 +537,54 @@
 
     let ultimoMercado = null;
 
-    async function obtenerMercado() {
-        const r = await fetch(`${APP.base}/api/mercado.php`, { cache: 'no-store' });
-        const datos = await r.json();
-        if (!r.ok) throw new Error(datos.error || 'API');
+    // La última respuesta del mercado se guarda en el navegador: al abrir la página se muestra al
+    // instante (aunque el servidor esté despertando o no haya señal) y luego se pone al día.
+    const CLAVE_MERCADO = 'mercado_guardado';
+    const MAX_GUARDADO_MS = 24 * 3600 * 1000;
+
+    function mercadoGuardado() {
+        try {
+            const d = JSON.parse(localStorage.getItem(CLAVE_MERCADO));
+            return d && Array.isArray(d.monedas) && Date.now() - d.actualizado * 1000 < MAX_GUARDADO_MS ? Object.assign(d, { desdeGuardado: true }) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /** Pide el mercado al servidor (máximo 25 s: un servidor dormido puede tardar en despertar). */
+    async function pedirMercado() {
+        const control = new AbortController();
+        const limite = setTimeout(() => control.abort(), 25000);
+        try {
+            const r = await fetch(`${APP.base}/api/mercado.php`, { cache: 'no-store', signal: control.signal });
+            const texto = await r.text();
+            const datos = JSON.parse(texto);
+            if (!r.ok) throw new Error(datos.error || 'API');
+            try { localStorage.setItem(CLAVE_MERCADO, texto); } catch (e) { /* sin espacio: no pasa nada */ }
+            return datos;
+        } finally {
+            clearTimeout(limite);
+        }
+    }
+
+    function usarMercado(datos) {
         datos.porId = Object.fromEntries(datos.monedas.map(m => [m.id, m]));
         ultimoMercado = datos;
         pintarCinta(datos);
-        revisarAlertas(datos);
+        if (!datos.desdeGuardado) revisarAlertas(datos); // las alertas solo con precios al día
         document.dispatchEvent(new CustomEvent('mercado', { detail: datos })); // otros módulos (p. ej. el radar técnico) reutilizan estos datos
         return datos;
+    }
+
+    /** Mercado del servidor; si no responde, los últimos precios guardados (salvo con permitirGuardado: false). */
+    async function obtenerMercado({ permitirGuardado = true } = {}) {
+        try {
+            return usarMercado(await pedirMercado());
+        } catch (e) {
+            const guardado = permitirGuardado && mercadoGuardado();
+            if (!guardado) throw e;
+            return usarMercado(guardado);
+        }
     }
 
     function pintarCinta(mercado) {
@@ -565,17 +603,34 @@
         const texto = $('texto-estado');
         const caja = $('estado-actualizacion');
         let siguiente = 0, temporizador = null, ultima = null, ultimoCiclo = 0;
+        let fallos = 0, reintento = null;
 
         async function ciclo() {
             ultimoCiclo = Date.now();
+            clearTimeout(reintento);
             try {
-                const mercado = await obtenerMercado();
+                const mercado = await obtenerMercado({ permitirGuardado: false });
                 ultima = mercado.actualizado * 1000;
+                fallos = 0;
                 caja?.classList.remove('error');
                 alActualizar(mercado);
             } catch (e) {
                 caja?.classList.add('error');
-                if (texto) texto.textContent = t('js.sin_conexion');
+                if (texto) texto.textContent = t(ultimoMercado ? 'js.datos_guardados' : 'js.sin_conexion');
+                console.error(e);
+                // Reintento rápido (3 s, 6 s, 12 s… hasta 30 s) en vez de esperar al siguiente minuto:
+                // así, en cuanto el servidor despierta, los precios aparecen.
+                reintento = setTimeout(ciclo, Math.min(30000, 3000 * 2 ** fallos++));
+            }
+        }
+
+        // Precios guardados de la última visita: la página se ve completa al instante.
+        const guardado = mercadoGuardado();
+        if (guardado) {
+            try {
+                alActualizar(usarMercado(guardado));
+                if (texto) texto.textContent = t('js.datos_guardados');
+            } catch (e) {
                 console.error(e);
             }
         }

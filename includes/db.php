@@ -33,8 +33,12 @@ function conexionPostgres(array $opciones): PDO
         throw new RuntimeException('DATABASE_URL no es una dirección postgresql:// válida');
     }
     parse_str($u['query'] ?? '', $extra);
-    $dsn = sprintf('pgsql:host=%s;port=%d;dbname=%s;sslmode=%s', $u['host'], $u['port'] ?? 5432,
+    // connect_timeout: si la base no responde, la página no se queda esperando.
+    $dsn = sprintf('pgsql:host=%s;port=%d;dbname=%s;sslmode=%s;connect_timeout=5', $u['host'], $u['port'] ?? 5432,
         ltrim(rawurldecode($u['path'] ?? ''), '/') ?: 'postgres', $extra['sslmode'] ?? 'require');
+    // Conexión persistente: cada proceso de Apache reutiliza la suya en vez de abrir una nueva
+    // (cifrada, hasta otro país) en cada visita. El Dockerfile limita los procesos a 8.
+    $opciones[PDO::ATTR_PERSISTENT] = true;
     $pdo = new PDO($dsn, rawurldecode($u['user'] ?? ''), rawurldecode($u['pass'] ?? ''), $opciones);
     // NOW() y las fechas guardadas usan la misma hora que PHP (config.php).
     $pdo->exec('SET TIME ZONE ' . $pdo->quote(ZONA_HORARIA));
@@ -68,9 +72,18 @@ function db(): PDO
         return $pdo;
     }
     if (esPostgres()) {
-        $pdo = conexionPostgres($opciones);
-        crearTablas($pdo, 'esquema_pgsql.sql', DIR_DATA . '/.esquema_pgsql_v1'); // todo es "IF NOT EXISTS": repetirlo no hace daño
-        return $pdo;
+        // Si la base no responde, se recuerda el error: el resto de la visita no vuelve a esperar.
+        static $fallo = null;
+        if ($fallo) {
+            throw $fallo;
+        }
+        try {
+            $conexion = conexionPostgres($opciones);
+            crearTablas($conexion, 'esquema_pgsql.sql', DIR_DATA . '/.esquema_pgsql_v2'); // todo es "IF NOT EXISTS": repetirlo no hace daño
+        } catch (Throwable $e) {
+            throw $fallo = $e;
+        }
+        return $pdo = $conexion;
     }
     try {
         $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NOMBRE . ';charset=utf8mb4', DB_USUARIO, DB_CLAVE, $opciones);

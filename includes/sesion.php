@@ -21,6 +21,19 @@ const CLAVES_PROTEGIDAS = [
 const CLAVES_PROGRESO = ['minitrading_v1', 'reto_records', 'subebaja_record', 'subebaja_stats', 'coach_stats', 'favoritos', 'alertas', 'diario_trading'];
 
 if (session_status() === PHP_SESSION_NONE) {
+    if (esPostgres()) {
+        // En la nube las sesiones van a la base: así nadie queda desconectado cuando el servidor se reinicia.
+        // Si la base no responde, se usan archivos (la página sigue funcionando).
+        try {
+            db();
+            require_once __DIR__ . '/sesiones_bd.php';
+            ini_set('session.use_strict_mode', '1'); // un id de sesión desconocido se cambia por uno nuevo
+            ini_set('session.gc_maxlifetime', (string) (7 * 86400));
+            session_set_save_handler(new SesionesBd(), true);
+        } catch (Throwable $e) {
+            error_log('sesiones en la base: ' . $e->getMessage());
+        }
+    }
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',

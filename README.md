@@ -53,6 +53,19 @@ Hecho en PHP + JavaScript (sin frameworks). Datos: un archivo SQLite en tu PC y 
 - Si nadie la visita en 15 minutos, la página "se duerme" y la siguiente visita tarda ~1 minuto en abrir.
 - El disco de Render se borra en cada nueva publicación. Por eso las cuentas no se guardan en un archivo, sino en una **base de datos gratuita en Supabase** (paso 2b). Sin ese paso la página funciona, pero las cuentas se pierden cada vez que subes cambios.
 
+### Paso 2a. Que la página no se duerma (gratis, 2 minutos)
+
+Para que abra rápido siempre (también desde el celular), un servicio gratuito la visita cada 10 minutos y Render nunca la duerme:
+
+1. Entra en <https://cron-job.org> → **Sign up** (gratis) y confirma tu correo.
+2. **Create cronjob**:
+   - **Title**: `CriptoAnalisis despierta`
+   - **URL**: `https://criptoanalisis.onrender.com/offline.html` (con tu link)
+   - **Execution schedule**: *Every 10 minutes*
+3. **Create**.
+
+Así no se gasta el cupo de CoinGecko (visita una página sin precios) y Render lo permite: un solo servicio encendido todo el mes cabe en las 750 horas gratis.
+
 ### Paso 2b. Base de datos gratuita para que las cuentas no se borren (Supabase)
 
 En tu PC todo se sigue guardando en el archivo `data/basedatos.sqlite`. En internet se usa PostgreSQL de Supabase (gratis, 500 MB, más que suficiente):

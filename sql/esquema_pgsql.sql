@@ -52,3 +52,11 @@ CREATE TABLE IF NOT EXISTS actividad (
 );
 CREATE INDEX IF NOT EXISTS idx_actividad_fecha ON actividad (fecha);
 CREATE INDEX IF NOT EXISTS idx_actividad_accion_fecha ON actividad (accion, fecha);
+
+-- v2: sesiones de usuario en la base (en Render el disco se borra al reiniciar el servidor).
+CREATE TABLE IF NOT EXISTS sesiones (
+    id      TEXT PRIMARY KEY,
+    datos   TEXT NOT NULL DEFAULT '',
+    expira  BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sesiones_expira ON sesiones (expira);

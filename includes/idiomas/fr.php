@@ -435,6 +435,7 @@ return [
     'js.actual' => 'Actuel',
     'js.borrar' => 'Supprimer',
     'js.sin_conexion' => 'Hors ligne, nouvelle tentative…',
+    'js.datos_guardados' => 'Derniers prix enregistrés · mise à jour…',
     'js.en_vivo' => 'En direct',
     'js.no_top100' => 'Pas dans le top 100.',
     'js.sube' => 'a monté de',

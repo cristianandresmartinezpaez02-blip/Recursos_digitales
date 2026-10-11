@@ -435,6 +435,7 @@ return [
     'js.actual' => 'Actual',
     'js.borrar' => 'Borrar',
     'js.sin_conexion' => 'Sin conexión, reintentando…',
+    'js.datos_guardados' => 'Últimos precios guardados · actualizando…',
     'js.en_vivo' => 'En vivo',
     'js.no_top100' => 'No está en el top 100.',
     'js.sube' => 'sube',
