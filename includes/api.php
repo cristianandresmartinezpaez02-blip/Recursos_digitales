@@ -303,14 +303,20 @@ function conCache(string $clave, int $ttl, callable $obtener, int $maxViejo = CA
 function obtenerTop100(): array
 {
     $res = conCache('mercado_top100', CACHE_MERCADO_SEG, function () {
-        return coingecko('/coins/markets', [
-            'vs_currency'             => MONEDA_BASE,
-            'order'                   => 'market_cap_desc',
-            'per_page'                => 100,
-            'page'                    => 1,
-            'sparkline'               => 'true',
-            'price_change_percentage' => '1h,24h,7d,30d,1y',
-        ]);
+        try {
+            return coingecko('/coins/markets', [
+                'vs_currency'             => MONEDA_BASE,
+                'order'                   => 'market_cap_desc',
+                'per_page'                => 100,
+                'page'                    => 1,
+                'sparkline'               => 'true',
+                'price_change_percentage' => '1h,24h,7d,30d,1y',
+            ]);
+        } catch (RuntimeException $e) {
+            // CoinGecko suele limitar a los servidores en la nube (comparten IP con muchas páginas).
+            error_log('CoinGecko falló (' . $e->getMessage() . '): se usa CoinPaprika + Binance');
+            return mercadoRespaldo();
+        }
     });
 
     // CoinGecko (plan gratuito) actualiza el precio cada 1-2 min; Binance, al segundo.
@@ -341,6 +347,125 @@ function obtenerTop100(): array
     }, $res['datos']);
 
     return $res;
+}
+
+/** Ids de CoinPaprika distintos de los de CoinGecko (los enlaces, favoritas y partidas usan los de CoinGecko). */
+const IDS_PAPRIKA_A_COINGECKO = [
+    'xrp-xrp' => 'ripple', 'bnb-binance-coin' => 'binancecoin', 'avax-avalanche' => 'avalanche-2',
+    'toncoin-the-open-network' => 'the-open-network', 'near-near-protocol' => 'near', 'steth-lido-staked-ether' => 'staked-ether',
+    'wsteth-wrapped-liquid-staked-ether-20' => 'wrapped-steth', 'leo-leo-token' => 'leo-token', 'hype-hyperliquid' => 'hyperliquid',
+    'cbbtc-coinbase-wrapped-btc' => 'coinbase-wrapped-btc', 'weeth-wrapped-eeth' => 'wrapped-eeth', 'usde-ethena-usde' => 'ethena-usde',
+    'cc-canton-network' => 'canton-network', 'matic-polygon' => 'matic-network', 'pol-polygon-ecosystem-token' => 'polygon-ecosystem-token',
+    'wbt-whitebit' => 'whitebit', 'hbar-hedera-hashgraph' => 'hedera-hashgraph', 'icp-internet-computer' => 'internet-computer',
+    'okb-okb' => 'okb', 'cro-cryptocom-chain' => 'crypto-com-chain', 'atom-cosmos' => 'cosmos', 'etc-ethereum-classic' => 'ethereum-classic',
+];
+
+/**
+ * Top 100 de respaldo cuando CoinGecko no responde: la lista y los datos de mercado vienen de
+ * CoinPaprika (gratis, sin clave) y el gráfico de 7 días de las velas de Binance. Devuelve el
+ * mismo formato que /coins/markets de CoinGecko, así el resto de la página no nota la diferencia.
+ */
+function mercadoRespaldo(): array
+{
+    // CoinPaprika renueva sus datos cada pocos minutos: 5 min de caché ahorran su cupo gratuito.
+    $tickers = conCache('respaldo_paprika', 300, function () {
+        [$codigo, $cuerpo] = peticionHttp('https://api.coinpaprika.com/v1/tickers?quotes=USD', [], 25);
+        $todas = $codigo === 200 ? json_decode($cuerpo, true) : null;
+        if (!is_array($todas)) {
+            throw new RuntimeException("CoinPaprika respondió HTTP $codigo");
+        }
+        $todas = array_values(array_filter($todas, fn($t) => !empty($t['rank']) && isset($t['quotes']['USD']['price'])));
+        usort($todas, fn($a, $b) => $a['rank'] <=> $b['rank']);
+        return array_slice($todas, 0, 100);
+    })['datos'];
+
+    // Velas de 1 h de los últimos 7 días (168), pedidas todas a la vez; se guardan 30 min.
+    try {
+        $velas = conCache('respaldo_sparklines', 1800, function () use ($tickers) {
+            $binance = preciosBinance()['precios'];
+            $multi = curl_multi_init();
+            $handles = [];
+            foreach ($tickers as $t) {
+                $s = strtoupper($t['symbol']);
+                $p = $binance[$s] ?? null;
+                $ref = (float) $t['quotes']['USD']['price'];
+                if ($s === 'USDT' || !$p || !$ref || abs($p / $ref - 1) > 0.05) {
+                    continue; // no cotiza en Binance (o es otra moneda con el mismo símbolo)
+                }
+                $ch = curl_init(BINANCE_URL . '/klines?' . http_build_query(['symbol' => $s . 'USDT', 'interval' => '1h', 'limit' => 168]));
+                curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_ENCODING => '', CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]);
+                curl_multi_add_handle($multi, $ch);
+                $handles[$s] = $ch;
+            }
+            do {
+                $estado = curl_multi_exec($multi, $activos);
+                if ($activos) {
+                    curl_multi_select($multi, 1);
+                }
+            } while ($activos && $estado === CURLM_OK);
+            $series = [];
+            foreach ($handles as $s => $ch) {
+                $datos = curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 ? json_decode((string) curl_multi_getcontent($ch), true) : null;
+                if (is_array($datos) && $datos) {
+                    $series[$s] = array_map(fn($v) => (float) $v[4], $datos); // precio de cierre de cada hora
+                }
+                curl_multi_remove_handle($multi, $ch);
+                curl_close($ch);
+            }
+            curl_multi_close($multi);
+            if (!$series) {
+                throw new RuntimeException('Binance no devolvió velas');
+            }
+            return $series;
+        })['datos'];
+    } catch (Throwable $e) {
+        $velas = []; // sin gráfico de 7 días, pero con precios
+    }
+
+    $porcentaje = fn($v) => is_numeric($v) && (float) $v != 0.0 ? (float) $v : null; // CoinPaprika usa 0 cuando no sabe
+    return array_map(function (array $t) use ($velas, $porcentaje) {
+        $q = $t['quotes']['USD'];
+        $precio = (float) $q['price'];
+        $simbolo = strtolower($t['symbol']);
+        $serie = $velas[strtoupper($t['symbol'])] ?? [];
+        $dia = array_slice($serie, -24);
+        $cambio24 = (float) ($q['percent_change_24h'] ?? 0);
+        return [
+            'id'                               => IDS_PAPRIKA_A_COINGECKO[$t['id']] ?? substr($t['id'], strpos($t['id'], '-') + 1),
+            'symbol'                           => $simbolo,
+            'name'                             => $t['name'],
+            'image'                            => 'https://static.coinpaprika.com/coin/' . rawurlencode($t['id']) . '/logo.png',
+            'current_price'                    => $precio,
+            'market_cap'                       => (float) $q['market_cap'],
+            'market_cap_rank'                  => (int) $t['rank'],
+            'fully_diluted_valuation'          => !empty($t['max_supply']) ? $t['max_supply'] * $precio : null,
+            'total_volume'                     => (float) $q['volume_24h'],
+            'high_24h'                         => $dia ? max(max($dia), $precio) : null,
+            'low_24h'                          => $dia ? min(min($dia), $precio) : null,
+            'price_change_24h'                 => $precio - $precio / (1 + $cambio24 / 100),
+            'price_change_percentage_24h'      => $cambio24,
+            'market_cap_change_24h'            => null,
+            'market_cap_change_percentage_24h' => $porcentaje($q['market_cap_change_24h'] ?? null),
+            'circulating_supply'               => $precio > 0 ? $q['market_cap'] / $precio : null,
+            'total_supply'                     => $t['total_supply'] ?: null,
+            'max_supply'                       => $t['max_supply'] ?: null,
+            'ath'                              => $q['ath_price'] ?? null,
+            'ath_change_percentage'            => $q['percent_from_price_ath'] ?? null,
+            'ath_date'                         => $q['ath_date'] ?? null,
+            'atl'                              => null,
+            'atl_change_percentage'            => null,
+            'atl_date'                         => null,
+            'last_updated'                     => $t['last_updated'],
+            'sparkline_in_7d'                  => ['price' => $serie],
+            'price_change_percentage_1h_in_currency'  => $porcentaje($q['percent_change_1h'] ?? null),
+            'price_change_percentage_24h_in_currency' => $cambio24,
+            'price_change_percentage_7d_in_currency'  => $porcentaje($q['percent_change_7d'] ?? null),
+            'price_change_percentage_30d_in_currency' => $porcentaje($q['percent_change_30d'] ?? null),
+            'price_change_percentage_1y_in_currency'  => $porcentaje($q['percent_change_1y'] ?? null),
+            'fuente_lista'                     => 'coinpaprika',
+        ];
+    }, $tickers);
 }
 
 function buscarEnTop100(string $id): ?array
