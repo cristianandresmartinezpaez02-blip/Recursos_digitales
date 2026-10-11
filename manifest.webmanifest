@@ -1,0 +1,20 @@
+{
+  "name": "CriptoAnálisis",
+  "short_name": "CriptoAnálisis",
+  "description": "Mercado cripto en vivo, análisis técnico, juegos de trading y herramientas para traders.",
+  "lang": "es",
+  "start_url": "index.php",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#05060f",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "assets/img/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/img/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Escáner técnico", "url": "paginas/escaner.php" },
+    { "name": "Trading en vivo", "url": "paginas/trading.php" },
+    { "name": "Diario de trading", "url": "paginas/diario.php" }
+  ]
+}

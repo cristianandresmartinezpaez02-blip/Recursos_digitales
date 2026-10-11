@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "_topbar.html" %}
+<main class="home">
+  <h1 class="logo hero">Quiz<span>Py</span></h1>
+  <form class="join-box" action="{{ url_for('play') }}" method="get">
+    <input class="big" name="pin" inputmode="numeric" autocomplete="off" maxlength="7"
+           placeholder="PIN del juego" required autofocus>
+    <button class="btn btn-dark btn-block">Entrar</button>
+  </form>
+  <p class="home-note">¿Eres docente? <a href="{{ url_for('editor') }}">Crea un quiz</a> o
+    <a href="{{ url_for('quizzes') }}">elige uno para jugar</a>.</p>
+
+  <ul class="features">
+    <li><b>5 tipos de pregunta</b> Quiz, varias correctas, verdadero/falso, escribir la respuesta y encuestas.</li>
+    <li><b>Pregunta en el móvil</b> Los jugadores ven la pregunta y las respuestas en su pantalla.</li>
+    <li><b>Rachas y velocidad</b> Más puntos por responder rápido y bonus por aciertos seguidos.</li>
+    <li><b>Reconexión automática</b> Si se cae el wifi, el jugador vuelve con sus puntos.</li>
+    <li><b>Reacciones en vivo</b> Los jugadores envían emojis que aparecen en la pantalla grande.</li>
+    <li><b>Informes gratis</b> Historial de partidas y exportación a Excel (CSV).</li>
+  </ul>
+</main>
+{% endblock %}

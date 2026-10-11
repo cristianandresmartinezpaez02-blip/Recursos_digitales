@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Iniciando sesión…</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 16px system-ui, sans-serif; background: #0b0f1d; color: #e6e9f5; }
+    </style>
+</head>
+<body>
+<p>Iniciando sesión… esta ventana se cerrará sola.</p>
+<script>
+    // Ventana emergente del inicio de sesión con Microsoft (Hotmail / Outlook): Microsoft vuelve
+    // aquí con el resultado en la #parte final de la URL. Se entrega a la página que abrió la
+    // ventana (mismo sitio) y se cierra. El token nunca pasa por el historial ni por el servidor.
+    (function () {
+        var datos = location.hash.slice(1) || location.search.slice(1);
+        history.replaceState(null, '', location.pathname);
+        if (window.opener && datos) {
+            window.opener.postMessage({ tipo: 'oauth-retorno', datos: datos }, location.origin);
+        }
+        window.close();
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Informe · {{ game.title }}{% endblock %}
+{% block content %}
+{% include "_topbar.html" %}
+<main class="container">
+  <div class="page-head">
+    <div>
+      <h1>{{ game.title }}</h1>
+      <p class="muted-light">{{ game.played }} · PIN {{ game.pin }} · {{ game.players }} jugadores</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('game_csv', game_id=game.id) }}">Descargar CSV (Excel)</a>
+  </div>
+
+  <h2>Clasificación</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Aciertos</th><th>Mejor racha</th></tr></thead>
+      <tbody>
+      {% for p in game.report.players %}
+        <tr>
+          <td>{{ ['🥇','🥈','🥉'][p.rank - 1] if p.rank <= 3 else p.rank }}</td>
+          <td>{{ p.avatar }} {{ p.name }}</td>
+          <td><b>{{ p.score }}</b></td>
+          <td>{{ p.correct }} / {{ stats|length }}</td>
+          <td>{{ p.best_streak }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Preguntas</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>#</th><th>Pregunta</th><th>Respuesta correcta</th><th>% de acierto</th><th>Tiempo medio</th></tr></thead>
+      <tbody>
+      {% for s in stats %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ s.text }}</td>
+          <td>{{ s.correct or '— (encuesta)' }}</td>
+          <td>
+            {% if s.rate is none %}—{% else %}
+            <div class="rate"><div class="rate-bar {{ 'good' if s.rate >= 60 else 'mid' if s.rate >= 35 else 'bad' }}" style="width: {{ s.rate }}%"></div><span>{{ s.rate }} %</span></div>
+            {% endif %}
+          </td>
+          <td>{{ s.avg_time ~ ' s' if s.avg_time is not none else '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted-light">Las preguntas con menos del 35 % de acierto aparecen en rojo: son buenas candidatas para repasar en clase.</p>
+</main>
+{% endblock %}

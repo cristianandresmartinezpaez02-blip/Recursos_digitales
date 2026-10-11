@@ -1,0 +1,26 @@
+# Configuración para Apache (XAMPP y la mayoría de hostings: InfinityFree, Hostinger, 000webhost…).
+DirectoryIndex index.php
+Options -Indexes
+
+# Archivos que nunca deben verse desde el navegador.
+<FilesMatch "\.(sql|md|txt|bat|py|zip|log|ejemplo\.php)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Carpetas internas (configuración, datos, código compartido, copias para publicar).
+    RewriteRule ^(config|data|includes|sql|publicar|quizpy)(/|$) - [F,L]
+
+    # Forzar https (candado). Actívalo quitando el "#" de las 4 líneas de abajo SOLO cuando
+    # tu hosting ya tenga el certificado SSL instalado (si no, la página dejaría de abrir).
+    # RewriteCond %{HTTPS} off
+    # RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    # RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

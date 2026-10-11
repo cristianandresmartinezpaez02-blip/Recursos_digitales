@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Editor · QuizPy{% endblock %}
+{% block content %}
+{% include "_topbar.html" %}
+<main class="container editor">
+  <div class="card editor-meta">
+    <input id="quiz-title" class="field title-input" maxlength="120" placeholder="Título del quiz">
+    <textarea id="quiz-desc" class="field" rows="2" maxlength="500" placeholder="Descripción (opcional)"></textarea>
+  </div>
+
+  <div id="questions"></div>
+
+  <div class="add-bar">
+    <span>Añadir pregunta:</span>
+    <button type="button" class="btn btn-light btn-sm" data-add="quiz">Quiz</button>
+    <button type="button" class="btn btn-light btn-sm" data-add="tf">Verdadero / Falso</button>
+    <button type="button" class="btn btn-light btn-sm" data-add="multi">Varias correctas</button>
+    <button type="button" class="btn btn-light btn-sm" data-add="type">Escribir respuesta</button>
+    <button type="button" class="btn btn-light btn-sm" data-add="poll">Encuesta</button>
+  </div>
+
+  <div class="save-bar">
+    <span><b id="q-total">0</b> preguntas · <kbd>Ctrl</kbd>+<kbd>S</kbd> para guardar</span>
+    <div class="row">
+      <button type="button" class="btn btn-light" id="btn-save">Guardar</button>
+      <button type="button" class="btn btn-green" id="btn-save-play">Guardar y jugar ▶</button>
+    </div>
+  </div>
+</main>
+<div id="toast" class="toast" hidden></div>
+{% endblock %}
+
+{% block scripts %}
+<script>window.QUIZ = {{ quiz|tojson }};</script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+{% endblock %}

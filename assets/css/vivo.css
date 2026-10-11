@@ -1,0 +1,281 @@
+/* ==========================================================
+   CriptoAnálisis · capa visual "vivo"
+   Fondo con auroras, bordes degradados, brillos y colores
+   más intensos. Se carga después de estilos.css y secciones.css.
+   ========================================================== */
+
+:root {
+    --vivo-1: #7c3aed;  /* violeta */
+    --vivo-2: #c026d3;  /* fucsia */
+    --vivo-3: #06b6d4;  /* cian */
+    --vivo-4: #f59e0b;  /* ámbar */
+    --vivo-5: #10b981;  /* esmeralda */
+    --vivo-6: #3b82f6;  /* azul */
+    --gradiente: linear-gradient(135deg, var(--vivo-1) 0%, var(--vivo-2) 50%, var(--vivo-3) 100%);
+    --gradiente-suave: linear-gradient(135deg, rgba(124, 58, 237, .14), rgba(192, 38, 211, .10) 50%, rgba(6, 182, 212, .12));
+    --borde-gradiente: linear-gradient(135deg, rgba(124, 58, 237, .45), rgba(192, 38, 211, .12) 40%, rgba(6, 182, 212, .40));
+    --acento: #7c3aed;
+    --acento-suave: rgba(124, 58, 237, .10);
+    --fondo: #f5f3ff;
+    --fondo-2: #ece8fb;
+    --panel: rgba(255, 255, 255, .78);
+    --brillo: 0 10px 40px rgba(124, 58, 237, .18);
+    --radio: 20px;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --acento: #a78bfa;
+        --acento-suave: rgba(167, 139, 250, .14);
+        --fondo: #05060f;
+        --fondo-2: #0d0f22;
+        --panel: rgba(16, 18, 38, .72);
+        --panel-solido: #11132a;
+        --borde-gradiente: linear-gradient(135deg, rgba(167, 139, 250, .55), rgba(192, 38, 211, .10) 40%, rgba(34, 211, 238, .45));
+        --brillo: 0 10px 50px rgba(124, 58, 237, .35);
+    }
+}
+:root[data-theme="dark"] {
+    --acento: #a78bfa;
+    --acento-suave: rgba(167, 139, 250, .14);
+    --fondo: #05060f;
+    --fondo-2: #0d0f22;
+    --panel: rgba(16, 18, 38, .72);
+    --panel-solido: #11132a;
+    --borde-gradiente: linear-gradient(135deg, rgba(167, 139, 250, .55), rgba(192, 38, 211, .10) 40%, rgba(34, 211, 238, .45));
+    --brillo: 0 10px 50px rgba(124, 58, 237, .35);
+}
+
+/* ---------- Fondo con auroras animadas ---------- */
+body { background: var(--fondo); }
+body::before, body::after {
+    content: ""; position: fixed; z-index: -1; pointer-events: none; border-radius: 50%;
+    filter: blur(90px); opacity: .55;
+}
+body::before {
+    width: 55vw; height: 55vw; left: -15vw; top: -20vw;
+    background: radial-gradient(circle, var(--vivo-1), transparent 65%);
+    animation: aurora-a 22s ease-in-out infinite alternate;
+}
+body::after {
+    width: 50vw; height: 50vw; right: -15vw; top: 10vh;
+    background: radial-gradient(circle, var(--vivo-3), transparent 65%);
+    animation: aurora-b 26s ease-in-out infinite alternate;
+    opacity: .38;
+}
+@keyframes aurora-a { to { transform: translate(18vw, 22vh) scale(1.15); } }
+@keyframes aurora-b { to { transform: translate(-20vw, 35vh) scale(.9); } }
+:root:not([data-theme="dark"]) body::before { opacity: .22; }
+:root:not([data-theme="dark"]) body::after { opacity: .18; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body::before { opacity: .55; } :root:not([data-theme="light"]) body::after { opacity: .38; } }
+@media (prefers-reduced-motion: reduce) { body::before, body::after { animation: none; } }
+
+/* ---------- Bordes degradados en tarjetas ---------- */
+.panel, .kpi, .tarjeta-seccion, .tarjeta-favorita, .hero-banner { position: relative; border-color: transparent; }
+.panel::after, .kpi::after, .tarjeta-seccion::after, .tarjeta-favorita::after, .hero-banner::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: var(--borde-gradiente);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+.kpi, .tarjeta-seccion, .tarjeta-favorita { transition: transform .2s ease, box-shadow .2s ease; }
+.kpi:hover, .tarjeta-seccion:hover, .tarjeta-favorita:hover { transform: translateY(-3px); box-shadow: var(--brillo); }
+
+/* ---------- Tipografía y títulos ---------- */
+.hero h1 {
+    background: linear-gradient(120deg, var(--texto) 30%, var(--acento) 70%, var(--vivo-3));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.titulo-gradiente { background: var(--gradiente); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.etiqueta-seccion {
+    padding: .3rem .7rem; border-radius: 999px; background: var(--gradiente-suave);
+    border: 1px solid color-mix(in srgb, var(--acento) 30%, transparent);
+}
+.kpi-valor { letter-spacing: -.02em; }
+
+/* ---------- Barra superior ---------- */
+.logo-marca { background: var(--gradiente); box-shadow: 0 0 22px rgba(192, 38, 211, .55); animation: latir 4s ease-in-out infinite; }
+@keyframes latir { 50% { box-shadow: 0 0 34px rgba(6, 182, 212, .6); } }
+.nav > a.activo, .menu.activo > summary {
+    background: var(--gradiente); color: #fff; box-shadow: 0 6px 20px rgba(124, 58, 237, .35);
+}
+.submenu { border-radius: 16px; }
+.submenu a .ico {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none;
+    background: var(--gradiente-suave);
+}
+
+/* ---------- Botones ---------- */
+.boton { background: var(--gradiente); background-size: 200% 200%; position: relative; overflow: hidden; }
+.boton:not(.secundario):not(.peligro)::before {
+    content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent);
+    transform: skewX(-20deg); transition: left .6s ease;
+}
+.boton:hover::before { left: 120%; }
+.boton.secundario { background: var(--panel-hover); }
+.chip.activo { background: var(--gradiente); color: #fff; border-color: transparent; }
+.pestanas button.activa, .segmentado button.activa { background: var(--gradiente); color: #fff; }
+.pestanas-seccion a.activa { border-bottom-width: 3px; border-image: var(--gradiente) 1; }
+
+/* ---------- Iconos de colores ---------- */
+.kpi-icono { background: var(--gradiente); color: #fff; box-shadow: 0 4px 14px rgba(124, 58, 237, .35); }
+.kpis > :nth-child(2) .kpi-icono { background: linear-gradient(135deg, var(--vivo-3), var(--vivo-6)); }
+.kpis > :nth-child(3) .kpi-icono { background: linear-gradient(135deg, var(--vivo-4), var(--vivo-2)); }
+.kpis > :nth-child(4) .kpi-icono { background: linear-gradient(135deg, var(--vivo-5), var(--vivo-3)); }
+.kpis > :nth-child(5) .kpi-icono { background: linear-gradient(135deg, var(--vivo-6), var(--vivo-1)); }
+.ico-grande { background: var(--gradiente) !important; box-shadow: 0 8px 24px rgba(124, 58, 237, .35); }
+.explorar > :nth-child(6n+2) .ico-grande { background: linear-gradient(135deg, var(--vivo-3), var(--vivo-6)) !important; }
+.explorar > :nth-child(6n+3) .ico-grande { background: linear-gradient(135deg, var(--vivo-4), var(--vivo-2)) !important; }
+.explorar > :nth-child(6n+4) .ico-grande { background: linear-gradient(135deg, var(--vivo-5), var(--vivo-3)) !important; }
+.explorar > :nth-child(6n+5) .ico-grande { background: linear-gradient(135deg, var(--vivo-2), var(--vivo-4)) !important; }
+.explorar > :nth-child(6n) .ico-grande { background: linear-gradient(135deg, var(--vivo-6), var(--vivo-1)) !important; }
+
+/* ---------- Tablas ---------- */
+.tabla tbody tr:hover { background: var(--gradiente-suave); box-shadow: inset 3px 0 0 var(--acento); }
+.tabla th { color: var(--acento); opacity: .85; }
+
+/* ---------- Portada (inicio) ---------- */
+.hero-banner {
+    overflow: hidden; border-radius: 28px; padding: clamp(1.5rem, 4vw, 3rem); margin-bottom: 1.5rem;
+    background:
+        radial-gradient(600px 300px at 90% 10%, rgba(6, 182, 212, .25), transparent 70%),
+        radial-gradient(500px 300px at 10% 100%, rgba(192, 38, 211, .22), transparent 70%),
+        var(--panel);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem; align-items: center;
+}
+.hero-banner h1 { font-size: clamp(2rem, 4.5vw, 3.4rem); margin: .4rem 0 .6rem; line-height: 1.05; }
+.hero-banner p { color: var(--texto-2); font-size: 1.02rem; margin: 0 0 1.25rem; max-width: 60ch; }
+.hero-cifras { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.25rem; }
+.hero-cifras div > span { display: block; font-size: .78rem; color: var(--texto-3); text-transform: uppercase; letter-spacing: .06em; }
+.hero-cifras div strong { font-family: var(--fuente-titulos); font-size: clamp(1.4rem, 3vw, 2rem); font-variant-numeric: tabular-nums; }
+.hero-acciones { display: flex; flex-wrap: wrap; gap: .6rem; }
+.orbita { position: relative; height: 280px; }
+.orbita .moneda-flotante {
+    position: absolute; width: 64px; height: 64px; border-radius: 50%; padding: 6px;
+    background: var(--panel-solido); box-shadow: 0 10px 30px rgba(0, 0, 0, .25), 0 0 0 1px var(--borde);
+    animation: flotar 6s ease-in-out infinite;
+}
+.orbita .moneda-flotante img { width: 100%; height: 100%; border-radius: 50%; }
+.orbita .moneda-flotante .etq {
+    position: absolute; left: 50%; top: 100%; transform: translate(-50%, 6px); white-space: nowrap;
+    font-size: .72rem; font-weight: 700; padding: .1rem .45rem; border-radius: 999px; background: var(--panel-solido);
+}
+.orbita .centro {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 120px; height: 120px; border-radius: 50%;
+    background: var(--gradiente); display: grid; place-items: center; color: #fff; font-family: var(--fuente-titulos);
+    font-weight: 700; font-size: 2.2rem; box-shadow: 0 0 60px rgba(192, 38, 211, .55); animation: latir 4s ease-in-out infinite;
+}
+@keyframes flotar { 50% { transform: translateY(-14px); } }
+@media (prefers-reduced-motion: reduce) { .orbita .moneda-flotante, .orbita .centro, .logo-marca { animation: none; } }
+@media (max-width: 860px) { .hero-banner { grid-template-columns: minmax(0, 1fr); } .orbita { height: 220px; } }
+
+/* ---------- Mejores / peores 25 ---------- */
+.columna-mejores .panel-cabecera h2, .columna-peores .panel-cabecera h2 { font-size: 1.3rem; }
+.columna-mejores::before, .columna-peores::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; border-radius: 20px 20px 0 0;
+}
+.columna-mejores::before { background: var(--sube); }
+.columna-peores::before { background: var(--baja); }
+.num-rank { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; font-size: .78rem; font-weight: 700; background: var(--fondo-2); color: var(--texto-2); }
+.columna-mejores tr:nth-child(-n+3) .num-rank { background: var(--sube-fondo); color: var(--sube); }
+.columna-peores tr:nth-child(-n+3) .num-rank { background: var(--baja-fondo); color: var(--baja); }
+.barra-mov { display: block; height: 4px; border-radius: 999px; margin-top: 4px; }
+
+/* ---------- Ficha de moneda ---------- */
+.cabecera-moneda {
+    padding: 1.25rem 1.4rem; border-radius: 24px; position: relative;
+    background: radial-gradient(500px 200px at 0% 0%, rgba(124, 58, 237, .20), transparent 70%), var(--panel);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.cabecera-moneda::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: var(--borde-gradiente);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.identidad img { box-shadow: 0 0 0 4px var(--panel-solido), 0 0 40px rgba(124, 58, 237, .5); }
+.fila-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: .9rem; font-size: .85rem; color: var(--texto-2); }
+.fila-meta strong { color: var(--texto); font-variant-numeric: tabular-nums; }
+.tabla-mercados .confianza { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .35rem; vertical-align: middle; }
+.interruptor-grafico { display: inline-flex; gap: 2px; padding: 3px; border-radius: 11px; background: var(--fondo-2); border: 1px solid var(--borde); }
+.interruptor-grafico button { font: inherit; font-size: .8rem; font-weight: 600; border: 0; border-radius: 8px; padding: .32rem .7rem; background: transparent; color: var(--texto-2); cursor: pointer; }
+.interruptor-grafico button.activa { background: var(--gradiente); color: #fff; }
+
+/* ---------- Categorías, exchanges, máximos ---------- */
+.logos-apilados { display: inline-flex; }
+.logos-apilados img { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--panel-solido); margin-left: -8px; background: var(--panel-solido); }
+.logos-apilados img:first-child { margin-left: 0; }
+.barra-confianza { display: inline-flex; gap: 2px; vertical-align: middle; }
+.barra-confianza i { width: 6px; height: 14px; border-radius: 2px; background: var(--fondo-2); }
+.barra-confianza i.on { background: var(--gradiente); }
+.distancia-ath { width: 140px; height: 8px; border-radius: 999px; background: var(--fondo-2); overflow: hidden; display: inline-block; vertical-align: middle; }
+.distancia-ath span { display: block; height: 100%; border-radius: 999px; background: var(--gradiente); }
+.resultado-grande { font-family: var(--fuente-titulos); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.lista-conversion { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: .6rem; }
+.lista-conversion .item-conv { display: flex; align-items: center; gap: .6rem; padding: .65rem .8rem; border-radius: 12px; background: var(--panel-hover); border: 1px solid var(--borde); }
+.lista-conversion .item-conv img { border-radius: 50%; }
+.lista-conversion .item-conv strong { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* ---------- Bolsa y divisas ---------- */
+.tarjetas-indices { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.tarjeta-indice {
+    display: flex; flex-direction: column; gap: .2rem; align-items: flex-start; text-align: left; cursor: pointer;
+    padding: .8rem .9rem; border-radius: var(--radio); background: var(--panel); border: 1px solid var(--borde); color: inherit; font: inherit;
+}
+.tarjeta-indice:hover, .tarjeta-indice.activa { border-color: var(--acento); }
+.tarjeta-indice .nombre { font-size: .8rem; color: var(--texto-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tarjeta-indice svg { width: 100%; height: 30px; }
+.campo-rango { margin: .6rem 0; }
+.barra-rango { position: relative; height: 6px; margin: .45rem 0 .25rem; border-radius: 3px; background: linear-gradient(90deg, var(--baja), var(--neutral), var(--sube)); }
+.barra-rango span { position: absolute; top: -4px; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: var(--texto); }
+.lista-razones { list-style: none; padding: 0; margin: .75rem 0; display: grid; gap: .45rem; }
+.lista-razones li { display: flex; gap: .55rem; align-items: flex-start; font-size: .9rem; line-height: 1.45; }
+.lista-razones li > span:first-child { flex: none; width: 1.4rem; text-align: center; }
+.lista-divisas { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .4rem; max-height: 420px; overflow-y: auto; }
+.item-divisa { display: flex; align-items: center; gap: .55rem; padding: .45rem .6rem; border-radius: 10px; background: var(--fondo-2); }
+.item-divisa small { display: block; color: var(--texto-3); font-size: .75rem; }
+.item-divisa .derecha { margin-left: auto; font-variant-numeric: tabular-nums; }
+.bandera { font-size: 1.25rem; line-height: 1; }
+.fila-activa td { background: var(--acento-suave, rgba(91, 91, 240, .08)); }
+.acciones-fila { white-space: nowrap; }
+.acciones-fila .boton + .boton { margin-left: .3rem; }
+@media (max-width: 700px) { .ocultar-movil { display: none; } }
+
+/* ---------- Juego: cripto / bolsa, gráfico de la orden y explicación ---------- */
+.selector-clase { margin-bottom: .6rem; }
+.grafico-orden { margin: .5rem 0 .9rem; }
+.grafico-orden .panel-cabecera { margin-bottom: .25rem; gap: .5rem; }
+.grafico-orden .chip { padding: .15rem .55rem; font-size: .75rem; }
+.panel-explicacion { border-color: var(--acento); }
+.panel-explicacion h3 { font-size: .95rem; margin: .5rem 0; color: var(--texto-2); }
+.exp-resumen { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin-bottom: .5rem; }
+.exp-resumen p { flex: 1 1 320px; margin: 0; line-height: 1.5; }
+.exp-cifra { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.exp-cifra small { font-size: .95rem; font-weight: 600; margin-left: .3rem; }
+
+/* ---------- Acceso en un clic: Gmail, Hotmail y Apple ---------- */
+.acceso-social { display: grid; gap: .6rem; margin-top: 1.4rem; }
+.acceso-social-titulo { margin: 0 0 .1rem; font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--texto-3); }
+.boton-social {
+    display: grid; grid-template-columns: 22px 1fr 22px; align-items: center; gap: .6rem;
+    width: 100%; min-height: 48px; padding: .55rem 1rem; border-radius: 12px; cursor: pointer;
+    font-family: inherit; font-size: .95rem; font-weight: 600; color: var(--texto); text-align: center;
+    background: var(--panel-hover, rgba(127, 127, 160, .08)); border: 1px solid var(--borde-fuerte, var(--borde));
+    transition: border-color .15s, background-color .15s, transform .15s;
+}
+.boton-social::after { content: ""; } /* tercera columna vacía: el texto queda centrado */
+.boton-social:hover { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 10%, transparent); }
+.boton-social:active { transform: scale(.99); }
+.boton-social:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.boton-social svg { justify-self: center; }
+#social-mensaje:empty { display: none; }
+#social-mensaje { margin: .2rem 0 0; font-size: .85rem; line-height: 1.45; }
+.separador-o { display: flex; align-items: center; gap: .75rem; margin: 1.3rem 0 .2rem; color: var(--texto-3); font-size: .8rem; }
+.separador-o::before, .separador-o::after { content: ""; flex: 1; height: 1px; background: var(--borde-fuerte, var(--borde)); }
+.acceso-tarjeta #vista-entrar h2, .acceso-tarjeta #vista-registro h2 { margin-top: .9rem; }
+
+/* ---------- Simulador: escenarios de "si compro hoy" ---------- */
+.escenarios .escenario.baja-e { border-color: color-mix(in srgb, var(--baja) 45%, var(--borde)); }
+.escenarios .escenario.sube-e { border-color: color-mix(in srgb, var(--sube) 45%, var(--borde)); }
+.escenarios .kpi-sub small { display: inline-block; margin-top: .2rem; }

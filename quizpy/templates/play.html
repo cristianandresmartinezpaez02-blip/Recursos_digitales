@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Jugar · QuizPy{% endblock %}
+{% block content %}
+<div id="app" class="player-screen">
+  <header class="p-header">
+    <span id="h-name">QuizPy</span>
+    <span><b id="h-score">0</b> pts</span>
+  </header>
+  <div id="offline" class="offline" hidden>Sin conexión, reconectando…</div>
+
+  <section id="scr-connecting" class="p-screen p-body" hidden>
+    <div class="spinner"></div><p>Conectando…</p>
+  </section>
+
+  <section id="scr-join" class="p-screen p-body" hidden>
+    <h1 class="logo hero">Quiz<span>Py</span></h1>
+    <form id="join-form" class="join-box">
+      <input id="in-pin" class="big" inputmode="numeric" maxlength="7" placeholder="PIN del juego" autocomplete="off" required>
+      <input id="in-name" class="big" maxlength="20" placeholder="Tu apodo" autocomplete="off" required>
+      <p class="label">Elige tu avatar</p>
+      <div class="avatars" id="avatars"></div>
+      <button class="btn btn-dark btn-block" id="btn-join">¡Entrar!</button>
+      <p class="error" id="join-error"></p>
+    </form>
+  </section>
+
+  <section id="scr-wait" class="p-screen p-body" hidden>
+    <div class="big-emoji" id="w-emoji">🎮</div>
+    <h2 id="w-title"></h2>
+    <p id="w-sub"></p>
+    <div class="reactions-bar"></div>
+  </section>
+
+  <section id="scr-ready" class="p-screen p-body" hidden>
+    <p id="gr-label"></p>
+    <h2 id="gr-text"></h2>
+    <div class="spinner"></div>
+    <p>¡Prepárate!</p>
+  </section>
+
+  <section id="scr-answer" class="p-screen p-play" hidden>
+    <div class="p-qhead"><span id="a-counter"></span><span class="p-time" id="a-time"></span></div>
+    <div class="timebar"><div id="a-timebar"></div></div>
+    <div class="p-question" id="a-text"></div>
+    <img id="a-image" class="p-image" alt="" hidden>
+    <p class="hint-light" id="a-hint"></p>
+    <div id="a-options" class="p-answers"></div>
+    <form id="a-typed" class="typed" hidden>
+      <input id="a-input" class="big" maxlength="80" placeholder="Escribe tu respuesta" autocomplete="off">
+      <button class="btn btn-primary btn-block">Enviar</button>
+    </form>
+    <button id="a-submit" class="btn btn-primary btn-block" hidden>Enviar</button>
+  </section>
+
+  <section id="scr-sent" class="p-screen p-body" hidden>
+    <div class="big-emoji spin-slow">⏳</div>
+    <h2>¡Respuesta enviada!</h2>
+    <p>¿Habrás acertado?</p>
+    <div class="reactions-bar"></div>
+  </section>
+
+  <section id="scr-result" class="p-screen p-body" hidden>
+    <div class="big-emoji" id="r-icon"></div>
+    <h2 id="r-title"></h2>
+    <div class="points-pill" id="r-points"></div>
+    <p id="r-streak" class="strong"></p>
+    <p id="r-correct"></p>
+    <p id="r-rank" class="strong"></p>
+    <p id="r-gap"></p>
+    <div class="reactions-bar"></div>
+  </section>
+
+  <section id="scr-final" class="p-screen p-body" hidden>
+    <div class="big-emoji" id="f-medal"></div>
+    <h2 id="f-rank"></h2>
+    <p id="f-score" class="strong"></p>
+    <p id="f-stats"></p>
+    <a class="btn btn-primary" href="/">Jugar otra vez</a>
+  </section>
+
+  <section id="scr-kicked" class="p-screen p-body" hidden>
+    <div class="big-emoji">🚫</div>
+    <h2>El anfitrión te ha expulsado</h2>
+    <a class="btn btn-primary" href="/">Volver al inicio</a>
+  </section>
+</div>
+<canvas id="confetti"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script>window.PIN = {{ pin|tojson }};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/fx.js') }}"></script>
+<script src="{{ url_for('static', filename='js/play.js') }}"></script>
+{% endblock %}

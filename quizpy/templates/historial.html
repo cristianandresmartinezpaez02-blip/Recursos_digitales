@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Historial · QuizPy{% endblock %}
+{% block content %}
+{% include "_topbar.html" %}
+<main class="container">
+  <div class="page-head"><h1>Historial de partidas</h1></div>
+  {% if games %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Fecha</th><th>Quiz</th><th>PIN</th><th>Jugadores</th><th></th></tr></thead>
+      <tbody>
+      {% for g in games %}
+        <tr>
+          <td>{{ g.played }}</td>
+          <td>{{ g.title }}</td>
+          <td>{{ g.pin }}</td>
+          <td>{{ g.players }}</td>
+          <td class="right">
+            <a class="btn btn-light btn-sm" href="{{ url_for('game_detail', game_id=g.id) }}">Ver informe</a>
+            <a class="btn btn-light btn-sm" href="{{ url_for('game_csv', game_id=g.id) }}">CSV</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card empty"><p>Aún no se ha jugado ninguna partida.</p></div>
+  {% endif %}
+</main>
+{% endblock %}

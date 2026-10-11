@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Mis quizzes · QuizPy{% endblock %}
+{% block content %}
+{% include "_topbar.html" %}
+<main class="container">
+  <div class="page-head">
+    <h1>Mis quizzes</h1>
+    <div class="row">
+      <label class="btn btn-ghost">Importar JSON<input type="file" id="import-file" accept=".json,application/json" hidden></label>
+      <a class="btn btn-primary" href="{{ url_for('editor') }}">+ Crear quiz</a>
+    </div>
+  </div>
+
+  {% if quizzes %}
+  <div class="quiz-grid">
+    {% for q in quizzes %}
+    <article class="card quiz-card" data-id="{{ q.id }}" data-title="{{ q.title }}">
+      <h3>{{ q.title }}</h3>
+      {% if q.description %}<p class="muted">{{ q.description }}</p>{% endif %}
+      <p class="meta">{{ q.count }} pregunta{{ '' if q.count == 1 else 's' }} · {{ q.updated }}</p>
+      <div class="quiz-actions">
+        <a class="btn btn-green btn-sm" href="{{ url_for('host', quiz_id=q.id) }}">▶ Jugar</a>
+        <a class="btn btn-light btn-sm" href="{{ url_for('editor', quiz_id=q.id) }}">Editar</a>
+        <button class="btn btn-light btn-sm" data-act="dup">Duplicar</button>
+        <button class="btn btn-light btn-sm" data-act="export">Exportar</button>
+        <button class="btn btn-red btn-sm" data-act="del">Eliminar</button>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card empty">
+    <p>Todavía no tienes quizzes.</p>
+    <a class="btn btn-primary" href="{{ url_for('editor') }}">Crear el primero</a>
+  </div>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.quiz-card [data-act]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const card = btn.closest('.quiz-card');
+    const id = card.dataset.id;
+    const act = btn.dataset.act;
+    if (act === 'del') {
+      if (!confirm('¿Eliminar "' + card.dataset.title + '"? No se puede deshacer.')) return;
+      await fetch('/api/quizzes/' + id, { method: 'DELETE' });
+      location.reload();
+    } else if (act === 'dup') {
+      await fetch('/api/quizzes/' + id + '/duplicate', { method: 'POST' });
+      location.reload();
+    } else if (act === 'export') {
+      const quiz = await (await fetch('/api/quizzes/' + id)).json();
+      delete quiz.id;
+      const blob = new Blob([JSON.stringify(quiz, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = quiz.title.replace(/[^\w\- ]+/g, '').trim() + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+  });
+});
+
+document.getElementById('import-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (err) { alert('El archivo no es un JSON válido.'); return; }
+  const res = await fetch('/api/quizzes', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+  });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) { alert(out.error || 'No se pudo importar.'); return; }
+  location.reload();
+});
+</script>
+{% endblock %}

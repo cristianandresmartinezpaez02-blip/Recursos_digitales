@@ -1,0 +1,14 @@
+data/cache/*.json
+data/cache/.lock_*
+data/uso_api.json
+data/.esquema_*
+config/config.local.php
+publicar/
+data/basedatos.sqlite*
+php/
+vendor/
+composer.lock
+quizpy/venv/
+quizpy/*.db
+__pycache__/
+.vscode/

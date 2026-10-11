@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }} · QuizPy{% endblock %}
+{% block body_class %}host{% endblock %}
+{% block content %}
+<section id="screen-loading" class="screen center-screen">
+  <div class="spinner"></div><p>Creando partida…</p>
+</section>
+
+<section id="screen-lobby" class="screen lobby" hidden>
+  <div class="lobby-top">
+    <div class="lobby-join">
+      <p>Entra en <strong id="join-url"></strong> o escanea el código</p>
+      <p class="pin-label">PIN del juego:</p>
+      <div class="pin-big" id="pin">--- ---</div>
+    </div>
+    <div id="qr" class="qr"></div>
+  </div>
+  <div class="lobby-bar">
+    <div class="player-count"><span id="player-count">0</span><small>jugadores</small></div>
+    <h2 id="quiz-title" class="lobby-title"></h2>
+    <div class="lobby-actions">
+      <label class="check"><input type="checkbox" id="opt-shuffle"> Mezclar preguntas</label>
+      <label class="check"><input type="checkbox" id="opt-lock"> Bloquear entrada</label>
+      <button class="btn btn-primary kbd-next" id="btn-start" disabled>Comenzar</button>
+    </div>
+  </div>
+  <div id="players" class="players-grid"></div>
+  <p class="hint-light center">Haz clic sobre un jugador para expulsarlo.</p>
+</section>
+
+<section id="screen-question" class="screen q-screen" hidden>
+  <div class="q-top"><span id="q-counter"></span><span id="q-badge" class="badge"></span></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="q-middle">
+    <div class="timer-circle" id="q-timer">0</div>
+    <div class="q-media"><img id="q-image" class="q-image" alt="" hidden></div>
+    <div class="answers-counter">
+      <strong id="answer-count">0</strong><span>respuestas</span>
+      <button class="btn btn-light btn-sm" id="btn-skip">Saltar ⏭</button>
+    </div>
+  </div>
+  <div class="answers-grid" id="q-answers"></div>
+</section>
+
+<section id="screen-results" class="screen q-screen" hidden>
+  <div class="q-text small" id="r-text"></div>
+  <div class="bars" id="r-bars"></div>
+  <p class="r-correct" id="r-correct"></p>
+  <div class="results-foot">
+    <span id="r-summary"></span>
+    <button class="btn btn-primary kbd-next" id="btn-after-results">Siguiente</button>
+  </div>
+</section>
+
+<section id="screen-leaderboard" class="screen q-screen" hidden>
+  <h2 class="screen-title">Clasificación</h2>
+  <div id="lb-list" class="lb-list"></div>
+  <div class="results-foot">
+    <span id="lb-sub"></span>
+    <button class="btn btn-primary kbd-next" id="btn-next-q">Siguiente pregunta</button>
+  </div>
+</section>
+
+<section id="screen-final" class="screen q-screen" hidden>
+  <h2 class="screen-title" id="final-title"></h2>
+  <div class="podium" id="podium"></div>
+  <div class="final-actions">
+    <a class="btn btn-primary" id="btn-report" href="/historial">Ver informe</a>
+    <button class="btn btn-light" id="btn-again">Jugar de nuevo</button>
+    <a class="btn btn-light" href="{{ url_for('quizzes') }}">Mis quizzes</a>
+  </div>
+</section>
+
+<section id="screen-resync" class="screen center-screen" hidden>
+  <h2>La partida sigue en curso</h2>
+  <p>Se ha recuperado la conexión con tus jugadores.</p>
+  <button class="btn btn-primary kbd-next" id="btn-continue">Continuar</button>
+</section>
+
+<div id="getready" class="getready" hidden>
+  <div>
+    <p id="gr-label"></p>
+    <div class="gr-num" id="gr-num">3</div>
+    <p class="gr-text" id="gr-text"></p>
+  </div>
+</div>
+
+<div class="host-tools">
+  <button id="btn-sound" title="Silenciar sonidos">🔊</button>
+  <button id="btn-music" title="Música de espera">🎵</button>
+  <button id="btn-full" title="Pantalla completa">⛶</button>
+  <button id="btn-end" title="Terminar la partida">Terminar</button>
+</div>
+<canvas id="confetti"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.QUIZ_ID = {{ quiz.id }};
+  window.JOIN_BASE = {{ join_base|tojson }};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="{{ url_for('static', filename='js/fx.js') }}"></script>
+<script src="{{ url_for('static', filename='js/host.js') }}"></script>
+{% endblock %}

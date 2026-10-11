@@ -1,0 +1,8 @@
+# CSS, JS e imágenes: el navegador los guarda 1 año. Cada enlace lleva ?v=<fecha de
+# modificación> (ver url() en includes/header.php), así que un cambio se descarga al momento.
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/css application/javascript text/javascript image/svg+xml
+</IfModule>

@@ -1,0 +1,14 @@
+.git
+.gitignore
+.vscode
+php/
+vendor/
+publicar/
+quizpy/
+data/basedatos.sqlite*
+data/cache/*.json
+data/cache/.lock_*
+data/uso_api.json
+data/.esquema_*
+config/config.local.php
+iniciar.bat
