@@ -26,7 +26,6 @@
                 <a href="<?= e($urlAcceso) ?>"><?= e(t('cuenta.entrar')) ?></a>
                 <a href="<?= url('paginas/acceso.php') ?>?modo=registro"><?= e(t('cuenta.crear')) ?></a>
             <?php endif; ?>
-            <a href="<?= url('paginas/aprende.php') ?>"><?= e(t('nav.aprende')) ?></a>
         </nav>
     </div>
     <div class="pie-legal">

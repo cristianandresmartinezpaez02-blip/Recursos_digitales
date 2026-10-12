@@ -32,7 +32,9 @@ $anuncioTipo = ajuste('anuncio_tipo', 'info');
 const MONEDAS_VISTA = ['USD', 'EUR', 'COP', 'MXN', 'ARS', 'BRL', 'CLP', 'PEN', 'UYU', 'BOB', 'PYG', 'VES', 'DOP', 'CRC', 'GTQ', 'HNL',
     'NIO', 'PAB', 'CAD', 'GBP', 'CHF', 'JPY', 'CNY', 'KRW', 'INR', 'AUD', 'NZD', 'RUB', 'TRY', 'ZAR', 'NGN', 'EGP', 'AED', 'SAR', 'ILS',
     'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'SGD', 'HKD', 'TWD', 'THB', 'IDR', 'PHP', 'VND', 'MYR', 'PKR'];
-$monedaVista = in_array($_COOKIE['moneda'] ?? '', MONEDAS_VISTA, true) ? $_COOKIE['moneda'] : 'USD';
+// Sin preferencia guardada: pesos colombianos si el navegador está configurado para Colombia (es-CO).
+$monedaVista = in_array($_COOKIE['moneda'] ?? '', MONEDAS_VISTA, true) ? $_COOKIE['moneda']
+    : (preg_match('/^[a-z]{2,3}-CO\b/i', $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '') ? 'COP' : 'USD');
 $tasaVista = 1.0;
 if ($monedaVista !== 'USD') {
     require_once __DIR__ . '/bolsa.php';
@@ -176,7 +178,6 @@ $inicial = $usuario ? mb_strtoupper(mb_substr($usuario['nombre'], 0, 1)) : '';
                     </div>
                 </details>
             <?php endforeach; ?>
-            <a href="<?= url('paginas/aprende.php') ?>" class="<?= $activa === 'aprende' ? 'activo' : '' ?>"><span aria-hidden="true">📚</span> <?= e(t('nav.aprende')) ?></a>
         </nav>
         <div class="barra-derecha">
             <div class="buscador">

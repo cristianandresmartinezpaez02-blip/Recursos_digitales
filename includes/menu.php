@@ -34,5 +34,10 @@ function menuPrincipal(): array
             ['ranking', 'paginas/ranking.php', '🏅', 'nav.ranking', 'nav.ranking_d'],
             ['estrategias', 'paginas/estrategias.php', '🧠', 'nav.estrategias', 'nav.estrategias_d'],
         ]],
+        ['grupo' => 'nav.aprende', 'icono' => '📚', 'items' => [
+            ['aprende', 'paginas/aprende.php', '🧭', 'nav.guia', 'nav.guia_d'],
+            ['estafas', 'paginas/estafas.php', '🛡️', 'nav.estafas', 'nav.estafas_d'],
+            ['proyecto', 'paginas/proyecto.php', '💡', 'nav.proyecto', 'nav.proyecto_d'],
+        ]],
     ];
 }

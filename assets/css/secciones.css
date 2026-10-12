@@ -290,3 +290,34 @@
 /* Avisos push en el celular (includes/panel_push.php) */
 .panel-push .chip.activa { border-color: var(--sube); color: var(--sube); }
 .panel-push .form-linea { margin-top: .75rem; }
+
+/* ¿Es estafa? (paginas/estafas.php) */
+.lista-senales { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: .6rem; margin: 1rem 0; }
+.senal { display: flex; gap: .7rem; align-items: flex-start; padding: .75rem .9rem; border: 1px solid var(--borde); border-radius: 12px; background: var(--panel-hover); cursor: pointer; }
+.senal:has(input:checked) { border-color: var(--baja); background: var(--baja-fondo); }
+.senal input { margin-top: .25rem; width: 1.1rem; height: 1.1rem; flex: none; accent-color: var(--baja); }
+.senal strong { display: block; }
+.senal small { color: var(--texto-2); font-size: .84rem; }
+.resultado-riesgo { padding: 1rem; border-radius: 14px; border: 1px solid var(--borde); background: var(--panel-hover); }
+.resultado-riesgo .insignia { font-size: .9rem; }
+.resultado-riesgo p { margin: .6rem 0 0; }
+.medidor-riesgo { height: 10px; border-radius: 99px; background: var(--fondo-2); margin-top: .7rem; overflow: hidden; }
+.medidor-riesgo span { display: block; height: 100%; border-radius: inherit; background: var(--sube); transition: width .3s ease; }
+.medidor-riesgo span[data-nivel="medio"] { background: var(--neutral); }
+.medidor-riesgo span[data-nivel="alto"] { background: var(--baja); }
+.texto-neutral { color: var(--neutral); }
+.caso { font-size: 1.12rem; line-height: 1.5; padding: 1rem 1.1rem; border-left: 4px solid var(--acento); background: var(--panel-hover); border-radius: 10px; margin: 0 0 1rem; }
+.botones-quiz { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: .8rem; }
+#quiz-feedback { margin-bottom: .8rem; }
+.quiz-puntaje { font-family: var(--fuente-titulos); font-size: 1.6rem; font-weight: 700; margin: 0 0 .4rem; }
+
+/* Acerca del proyecto (paginas/proyecto.php) */
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: .8rem; }
+.cifra { padding: 1rem; border-radius: 14px; border: 1px solid var(--borde); background: var(--panel-hover); text-align: center; }
+.cifra strong { display: block; font-family: var(--fuente-titulos); font-size: 1.9rem; background: var(--gradiente); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cifra span { color: var(--texto-2); font-size: .85rem; }
+.problema-solucion { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
+.problema-solucion .panel { margin-bottom: 0; }
+.problema-solucion ul { margin: .5rem 0 0; padding-left: 1.2rem; color: var(--texto-2); }
+.problema-solucion li { margin-bottom: .45rem; }
+.funciones { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: .7rem; }
