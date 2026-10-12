@@ -1,4 +1,4 @@
-/* Iniciar sesión o crear cuenta en un clic con Gmail, Hotmail (cuenta Microsoft) y Apple.
+/* Iniciar sesión o crear cuenta en un clic con Gmail (y Hotmail / Apple si están configurados).
    Cada proveedor abre su propia ventana para elegir la cuenta; el servidor
    (api/auth.php?accion=oauth) comprueba con el proveedor que el acceso es válido. */
 (function () {
@@ -48,8 +48,9 @@
 
     // ---------- Hotmail / Outlook (cuenta personal de Microsoft) ----------
     // Ventana de Microsoft → vuelve a paginas/oauth-retorno.html → nos pasa el id_token.
+    // Hotmail y Apple solo tienen botón si su ID está configurado (paginas/acceso.php).
     let estadoMicrosoft = '';
-    $('boton-microsoft').addEventListener('click', () => {
+    $('boton-microsoft')?.addEventListener('click', () => {
         if (!O.microsoft) return sinConfigurar('Hotmail');
         estadoMicrosoft = Math.random().toString(36).slice(2) + Date.now().toString(36);
         const url = 'https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?' + new URLSearchParams({
@@ -77,7 +78,7 @@
     if (O.apple && window.AppleID) {
         AppleID.auth.init({ clientId: O.apple, scope: 'name email', redirectURI: O.redirect, nonce: O.nonce, usePopup: true });
     }
-    $('boton-apple').addEventListener('click', async () => {
+    $('boton-apple')?.addEventListener('click', async () => {
         if (!O.apple) return sinConfigurar('Apple');
         if (!window.AppleID) return mensaje(C.t('js.social_bloqueado', { proveedor: 'Apple' }));
         try {

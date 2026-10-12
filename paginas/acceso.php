@@ -10,7 +10,8 @@ if (haySesion()) {
 $modo = ($_GET['modo'] ?? '') === 'registro' ? 'registro' : 'entrar';
 $registroAbierto = registroAbierto();
 $facialActivo = facialActivo();
-// Gmail, Hotmail y Apple: los botones se ven siempre (si falta el Client ID, avisan al pulsarlos).
+// Gmail se ve siempre (si falta el Client ID, avisa al pulsarlo). Hotmail y Apple solo aparecen
+// cuando tienen su Client ID: sin directorio de Azure ni cuenta de pago de Apple no se pueden activar.
 $oauthGoogle = clientIdOauth('google') !== ''; // ID de config.local.php o del panel de administración
 $oauthApple = clientIdOauth('apple') !== '';
 $oauthMicrosoft = clientIdOauth('microsoft') !== '';
@@ -53,21 +54,25 @@ $beneficios = [
             <button type="button" role="tab" data-modo="registro" class="<?= $modo === 'registro' ? 'activa' : '' ?>">✨ <?= e(t('cuenta.crear')) ?></button>
         </div>
 
-        <?php /* Acceso en un clic. Los tres botones se ven siempre; si falta el ID de un proveedor, avisa al pulsarlo. */ ?>
+        <?php /* Acceso en un clic. Hotmail y Apple solo se muestran si tienen su ID configurado. */ ?>
         <div class="acceso-social" id="acceso-social">
             <p class="acceso-social-titulo"><?= e(t('cuenta.rapido')) ?></p>
             <button type="button" class="boton-social" id="boton-google">
                 <svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-5 2.3-8.2 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
                 <span><?= e(t('cuenta.con_gmail')) ?></span>
             </button>
+            <?php if ($oauthMicrosoft): ?>
             <button type="button" class="boton-social" id="boton-microsoft">
                 <svg aria-hidden="true" width="18" height="18" viewBox="0 0 21 21"><path fill="#F25022" d="M0 0h10v10H0z"/><path fill="#7FBA00" d="M11 0h10v10H11z"/><path fill="#00A4EF" d="M0 11h10v10H0z"/><path fill="#FFB900" d="M11 11h10v10H11z"/></svg>
                 <span><?= e(t('cuenta.con_hotmail')) ?></span>
             </button>
+            <?php endif; ?>
+            <?php if ($oauthApple): ?>
             <button type="button" class="boton-social" id="boton-apple">
                 <svg class="logo-apple" aria-hidden="true" width="17" height="20" viewBox="0 0 814 1000" fill="currentColor"><path d="M788 341c-6 4-108 62-108 190 0 148 130 200 134 202-1 3-21 72-69 142-43 62-88 123-156 123s-86-40-164-40c-76 0-104 41-166 41s-106-57-156-127C45 790 0 663 0 543 0 349 126 247 250 247c66 0 121 43 162 43 39 0 101-46 176-46 29 0 131 3 200 97zM554 159c31-37 53-88 53-139 0-7-1-14-2-20-50 2-110 34-146 76-28 32-55 83-55 135 0 8 1 16 2 18 3 1 9 2 14 2 45 0 102-30 134-72z"/></svg>
                 <span><?= e(t('cuenta.con_apple')) ?></span>
             </button>
+            <?php endif; ?>
             <p class="mensaje" id="social-mensaje" role="alert"></p>
         </div>
         <div class="separador-o"><span><?= e(t('cuenta.o_correo')) ?></span></div>
