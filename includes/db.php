@@ -28,7 +28,9 @@ function esPostgres(): bool
  */
 function conexionPostgres(array $opciones): PDO
 {
-    $u = parse_url(DATABASE_URL);
+    // trim: al pegarla en Render a veces se cuela un salto de línea al final, y parse_url lo
+    // convierte en «_» (la base pasaba a llamarse «postgres_» y no existía).
+    $u = parse_url(trim(DATABASE_URL));
     if (!$u || empty($u['host'])) {
         throw new RuntimeException('DATABASE_URL no es una dirección postgresql:// válida');
     }
