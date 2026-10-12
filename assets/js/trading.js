@@ -678,6 +678,57 @@
         const cambio = (puntos[puntos.length - 1].y / puntos[0].y - 1) * 100;
         $('o-graf-sub').innerHTML = `${C.escapar(m.symbol.toUpperCase())} · ${C.t('js.bolsa_en_periodo', { cambio: C.porcentaje(cambio) })}`;
         G.reemplazar($('o-grafico'), () => G.linea($('o-grafico'), puntos, { etiqueta: m.symbol.toUpperCase(), lineas, dias: diasGrafico }));
+        explicarGrafico(m);
+    }
+
+    // ---------- ¿Por qué subió o bajó la gráfica? ----------
+
+    const indiceCercano = (puntos, t) => puntos.reduce((mejor, p, i) => (Math.abs(p.x - t) < Math.abs(puntos[mejor].x - t) ? i : mejor), 0);
+
+    /** Cuánto se movió Bitcoin entre dos momentos (para saber si el mercado arrastró a la moneda). */
+    async function referenciaEntre(m, desde, hasta, dias) {
+        const btc = activos.bitcoin;
+        if (esAccion(m) || m.id === 'bitcoin' || !btc) return null;
+        try {
+            const p = conPrecioActual(await historialDe(btc, dias), btc);
+            const a = p[indiceCercano(p, desde)].y, b = p[indiceCercano(p, hasta)].y;
+            return a > 0 ? { nombre: 'Bitcoin', cambio: (b / a - 1) * 100 } : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /** ¿Por qué se movió la moneda en el periodo que muestra el gráfico? Usa una serie más larga
+        (el periodo siguiente: 1D → 7D…) para saber cómo venía antes de ese periodo. */
+    async function explicarGrafico(m) {
+        const opciones = [1, 7, 30, 90, 365];
+        const diasContexto = opciones[Math.min(opciones.indexOf(diasGrafico) + 1, opciones.length - 1)];
+        const dias = diasGrafico;
+        try {
+            const serie = conPrecioActual(await historialDe(m, diasContexto), m);
+            const fin = serie.length - 1;
+            const inicio = indiceCercano(serie, Date.now() - dias * 86400000);
+            const referencia = await referenciaEntre(m, serie[inicio].x, serie[fin].x, diasContexto);
+            if (monedaOrden() !== m || diasGrafico !== dias) return; // cambió mientras cargaba
+            const res = window.Coach.porQueSeMovio({ serie: serie.map(p => p.y), inicio, fin, referencia });
+            $('o-porque').innerHTML = window.Coach.htmlPorQue(res, m.symbol.toUpperCase(), 4);
+            $('o-porque-caja').hidden = !res;
+        } catch (e) {
+            $('o-porque-caja').hidden = true;
+        }
+    }
+
+    /** ¿Por qué se movió entre tu compra y tu venta? (panel "¿Por qué gané o perdí?") */
+    async function explicarTramo(op, m, dias) {
+        $('exp-porque').innerHTML = '';
+        if (!op.desde || !op.fecha) return;
+        try {
+            const serie = conPrecioActual(await historialDe(m, dias), m);
+            const inicio = indiceCercano(serie, op.desde), fin = indiceCercano(serie, op.fecha);
+            const referencia = await referenciaEntre(m, op.desde, op.fecha, dias);
+            const res = window.Coach.porQueSeMovio({ serie: serie.map(p => p.y), inicio, fin, referencia });
+            $('exp-porque').innerHTML = window.Coach.htmlPorQue(res, op.simbolo, 5);
+        } catch (e) { /* sin historial: queda el resto de la explicación */ }
     }
 
     // ---------- ¿Por qué gané o perdí? ----------
@@ -694,6 +745,7 @@
         if (!op || op.resultado === null || op.resultado === undefined) return;
         const panel = $('panel-explicacion');
         panel.hidden = false;
+        $('exp-porque').innerHTML = ''; // se rellena al cargar el camino del precio (explicarTramo)
         const gano = op.resultado >= 0;
         const costo = op.costo || op.total - op.resultado;
         const pct = costo ? op.resultado / costo * 100 : 0;
@@ -759,6 +811,7 @@
             const margen = Math.max(1800000, (op.fecha - op.desde) * 0.3);
             const puntos = conPrecioActual(await historialDe(m, dias), m).filter(p => p.x >= op.desde - margen);
             if (puntos.length < 2) throw new Error('pocos datos');
+            explicarTramo(op, m, dias);
             G.reemplazar($('exp-precio'), () => G.linea($('exp-precio'), puntos, {
                 etiqueta: op.simbolo, dias, color: C.css('--texto-2'),
                 lineas: [{ y: op.precioCompra * (1 + EQUILIBRIO / 100), etiqueta: C.t('js.equilibrio_corto'), color: C.css('--texto-3') }],

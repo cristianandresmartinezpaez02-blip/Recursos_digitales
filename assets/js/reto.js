@@ -46,6 +46,7 @@
             paso: 0, efectivo: APP.saldoInicial, posiciones: {}, seleccion: monedas[0].id, operaciones: 0, comisiones: 0, pausado: false,
             costos: {},        // dólares pagados por cada posición abierta (para saber si se gana o se pierde)
             iaCompra: {},      // qué decía la IA cuando se abrió cada posición
+            desde: {},         // paso en que se abrió cada posición (para explicar por qué se movió)
             ventas: [],        // cada venta, para el resumen final
             ia: { favor: { n: 0, res: 0 }, contra: { n: 0, res: 0 } },
             cacheIa: null,
@@ -128,25 +129,46 @@
             <a href="${APP.base}/paginas/estrategias.php#reto">${C.t('js.ver_guia')} →</a>`;
     }
 
-    /** Operaciones una por una y cómo te fue siguiendo (o no) a la IA. */
+    /** ¿Por qué se movió la moneda m entre dos pasos? (con Bitcoin y el resto del mercado en ese tramo) */
+    function porQue(m, desde, hasta) {
+        return window.Coach.porQueSeMovio({ serie: m.sparkline, inicio: desde, fin: hasta, ...window.Coach.contextoSemana(m, monedas, desde, hasta) });
+    }
+    /** Primera razón de un movimiento, en una línea (para la lista de operaciones). */
+    function razonCorta(m, desde, hasta) {
+        const r = m && hasta > desde ? porQue(m, desde, hasta) : null;
+        return r ? `<br><small class="razon-op">${r.razones[0][0]} ${r.razones[0][1]}</small>` : '';
+    }
+
+    /** Operaciones una por una (con el porqué de cada una) y cómo te fue siguiendo (o no) a la IA. */
     function resumenOperaciones() {
         const filas = juego.ventas.map(v => `<li>${v.resultado >= 0 ? '✔' : '✖'} ${C.t('js.reto_op_venta', {
             simbolo: C.escapar(v.simbolo), compra: C.precio(v.precioCompra), venta: C.precio(v.precioVenta),
             cambio: window.Coach.pct((v.precioVenta / v.precioCompra - 1) * 100, 2), resultado: firmado(v.resultado),
-        })}</li>`);
+        })}${razonCorta(monedas.find(x => x.id === v.id), v.pasoCompra, v.pasoVenta)}</li>`);
         Object.entries(juego.posiciones).forEach(([id, cant]) => {
             const m = monedas.find(x => x.id === id);
             const valor = cant * precioEn(m, pasos - 1) * (1 - APP.comision);
             const costo = juego.costos[id] || 0;
             filas.push(`<li>⏳ ${C.t('js.reto_op_abierta', {
                 simbolo: C.escapar(m.symbol.toUpperCase()), cambio: window.Coach.pct((valor / costo - 1) * 100, 2), resultado: firmado(valor - costo),
-            })}</li>`);
+            })}${razonCorta(m, juego.desde[id] ?? 0, pasos - 1)}</li>`);
         });
-        if (!filas.length) return '';
         const { favor, contra } = juego.ia;
         const ia = favor.n + contra.n ? `<p>🤖 ${C.t('js.reto_ia_seguiste', { a: favor.n, b: contra.n })} ${favor.res || contra.res
             ? C.t('js.reto_ia_resultado', { a: firmado(favor.res), b: firmado(contra.res) }) : ''}</p>` : '';
-        return `<h3>${C.t('js.reto_ops_titulo')}</h3><ul class="lista-ops-reto">${filas.join('')}</ul>${ia}`;
+        const ops = filas.length ? `<h3>${C.t('js.reto_ops_titulo')}</h3><ul class="lista-ops-reto">${filas.join('')}</ul>${ia}` : '';
+        return ops + semana();
+    }
+
+    /** Por qué se movieron en la semana la mejor y la peor moneda (y Bitcoin, que arrastra al resto). */
+    function semana() {
+        const cambio = m => precioEn(m, pasos - 1) / precioEn(m, 0) - 1;
+        const mejor = monedas.reduce((a, b) => (cambio(b) > cambio(a) ? b : a));
+        const peor = monedas.reduce((a, b) => (cambio(b) < cambio(a) ? b : a));
+        const btc = monedas.find(m => m.id === 'bitcoin');
+        const cajas = [...new Set([btc, mejor, peor].filter(Boolean))]
+            .map(m => window.Coach.htmlPorQue(porQue(m, 0, pasos - 1), m.symbol.toUpperCase(), 4)).join('');
+        return `<h3>${C.t('js.pq_semana_titulo')}</h3><div class="porque-rejilla">${cajas}</div>`;
     }
     const firmado = v => `<strong class="${v >= 0 ? 'sube' : 'baja'}">${v >= 0 ? '+' : '−'}${C.dinero(Math.abs(v))}</strong>`;
 
@@ -184,6 +206,7 @@
         const precio = precioActual(m);
         const cantidad = monto * (1 - APP.comision) / precio;
         const a = iaDe(m);
+        if (!juego.posiciones[m.id]) juego.desde[m.id] = juego.paso;
         if (!juego.posiciones[m.id] && a.listo) juego.iaCompra[m.id] = a.accion;
         if (a.listo) juego.ia[a.accion === 'comprar' ? 'favor' : 'contra'].n++;
         juego.posiciones[m.id] = (juego.posiciones[m.id] || 0) + cantidad;
@@ -212,19 +235,20 @@
         const resultado = recibido - costoVendido;
         const precioCompra = costoVendido * (1 - APP.comision) / cantidad;
         const accionCompra = juego.iaCompra[m.id];
+        const pasoCompra = juego.desde[m.id] ?? 0;
         juego.costos[m.id] -= costoVendido;
         juego.posiciones[m.id] = tiene - cantidad;
-        if (juego.posiciones[m.id] <= 1e-12) { delete juego.posiciones[m.id]; delete juego.costos[m.id]; delete juego.iaCompra[m.id]; }
+        if (juego.posiciones[m.id] <= 1e-12) { delete juego.posiciones[m.id]; delete juego.costos[m.id]; delete juego.iaCompra[m.id]; delete juego.desde[m.id]; }
         juego.efectivo += recibido;
         juego.operaciones++;
         juego.comisiones += cantidad * precio * APP.comision;
-        juego.ventas.push({ simbolo: m.symbol.toUpperCase(), precioCompra, precioVenta: precio, resultado });
+        juego.ventas.push({ id: m.id, simbolo: m.symbol.toUpperCase(), precioCompra, precioVenta: precio, resultado, pasoCompra, pasoVenta: juego.paso });
         if (accionCompra) juego.ia[accionCompra === 'comprar' ? 'favor' : 'contra'].res += resultado;
         mensaje(C.t('js.reto_vendiste', { cantidad: C.cantidad(cantidad), simbolo: m.symbol.toUpperCase(), recibido: C.dinero(recibido) }), 'exito');
         $('r-explica').innerHTML = window.Coach.explicarVenta({
             simbolo: m.symbol.toUpperCase(), precioCompra, precioVenta: precio, resultado, accionCompra, a: iaDe(m),
             comisiones: costoVendido * APP.comision + cantidad * precio * APP.comision,
-        });
+        }) + window.Coach.htmlPorQue(porQue(m, pasoCompra, juego.paso), m.symbol.toUpperCase(), 4);
         pintar();
     }
 

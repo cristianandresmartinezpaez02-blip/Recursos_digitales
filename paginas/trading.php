@@ -95,6 +95,7 @@ require __DIR__ . '/../includes/header.php';
                         </div>
                     </div>
                     <div class="grafico-caja mini"><canvas id="o-grafico" aria-label="<?= e(t('trading.grafico_precio')) ?>"></canvas></div>
+                    <details class="porque-plegable" id="o-porque-caja" hidden><summary>🔍 <?= e(t('trading.porque')) ?></summary><div id="o-porque"></div></details>
                 </div>
                 <div class="selector-lado" role="radiogroup" aria-label="<?= e(t('trading.tipo')) ?>">
                     <label><input type="radio" name="lado" value="compra" checked> <?= e(t('trading.comprar')) ?></label>
@@ -155,6 +156,7 @@ require __DIR__ . '/../includes/header.php';
             </div>
         </div>
         <ul class="lista-razones" id="exp-razones"></ul>
+        <div id="exp-porque"></div>
         <div class="consejo-juego" id="exp-leccion"></div>
     </div>
     <div class="panel" id="panel-ordenes">

@@ -199,6 +199,117 @@
         return `<p class="coach-stats">📊 ${base} ${C.t('js.ia_aviso')}</p>`;
     }
 
+    // ---------- ¿Por qué subió o bajó la gráfica? ----------
+
+    /**
+     * Explica un movimiento del precio entre dos puntos de una serie, solo con los datos del gráfico:
+     * si lo arrastró el mercado o fue propio, rupturas de máximos/mínimos, RSI antes del movimiento,
+     * tendencia previa, tamaño frente a lo habitual y el camino recorrido.
+     * d: { serie, inicio, fin (índices), simbolo, referencia: {nombre, cambio} | null,
+     *      amplitud: {mismo, total} | null (cuántas monedas se movieron en la misma dirección) }
+     * Devuelve { cambio, razones: [[icono, texto]] } o null si no hay datos suficientes.
+     */
+    function porQueSeMovio(d) {
+        const serie = d.serie;
+        const inicio = Math.max(0, d.inicio), fin = Math.min(serie.length - 1, d.fin);
+        if (!(fin > inicio) || !(serie[inicio] > 0) || !(serie[fin] > 0)) return null;
+        const p0 = serie[inicio], p1 = serie[fin];
+        const cambio = (p1 / p0 - 1) * 100;
+        const subio = cambio >= 0;
+        const tramo = serie.slice(inicio, fin + 1);
+        const pico = (Math.max(...tramo) / p0 - 1) * 100;
+        const valle = (Math.min(...tramo) / p0 - 1) * 100;
+        const razones = [];
+        const agregar = (ico, clave, datos = {}) => razones.push([ico, C.t(clave, datos)]);
+
+        // 1. ¿Lo movió todo el mercado o fue algo propio de esta moneda?
+        const ref = d.referencia;
+        if (ref && Number.isFinite(ref.cambio) && Math.abs(cambio) >= 0.3) {
+            const datos = { nombre: C.escapar(ref.nombre), ref: pct(ref.cambio), cambio: pct(cambio) };
+            if ((ref.cambio >= 0) === subio && Math.abs(ref.cambio) >= Math.abs(cambio) * 0.4) agregar('🌐', subio ? 'js.pq_mercado_sube' : 'js.pq_mercado_baja', datos);
+            // En contra del mercado, o con el mercado casi quieto: el movimiento es de la moneda.
+            else if ((ref.cambio >= 0) !== subio || Math.abs(ref.cambio) < 0.3) agregar('🎯', 'js.pq_propio', datos);
+            else agregar('🌗', 'js.pq_mercado_parcial', datos);
+        }
+        if (d.amplitud && d.amplitud.total >= 5) {
+            const p = Math.round(d.amplitud.mismo / d.amplitud.total * 100);
+            if (p >= 70) agregar('👥', subio ? 'js.pq_amplitud_sube' : 'js.pq_amplitud_baja', { pct: p });
+            else if (p <= 35) agregar('🦄', subio ? 'js.pq_contra_sube' : 'js.pq_contra_baja', { pct: 100 - p });
+        }
+
+        // 2. Rupturas: superar el máximo (o perder el mínimo) de los días anteriores acelera el movimiento.
+        const previo = serie.slice(Math.max(0, inicio - 48), inicio + 1);
+        if (previo.length >= 8) {
+            const maxPrevio = Math.max(...previo), minPrevio = Math.min(...previo);
+            if (subio && Math.max(...tramo) > maxPrevio * 1.002) agregar('🚀', 'js.pq_ruptura_max');
+            else if (!subio && Math.min(...tramo) < minPrevio * 0.998) agregar('🕳️', 'js.pq_ruptura_min');
+        }
+
+        // 3. Cómo estaba antes de moverse: RSI y tendencia previa.
+        const r = rsi(serie.slice(0, inicio + 1));
+        if (r !== null) {
+            const v = C.numero(r, 0);
+            if (r >= 70) agregar('🌡️', subio ? 'js.pq_sobrecompra_sube' : 'js.pq_sobrecompra_baja', { v });
+            else if (r <= 30) agregar('🧲', subio ? 'js.pq_sobreventa_sube' : 'js.pq_sobreventa_baja', { v });
+        }
+        const atras = Math.min(8, inicio);
+        if (atras >= 3) {
+            const previa = (p0 / serie[inicio - atras] - 1) * 100;
+            if (Math.abs(previa) >= 0.5) agregar(previa >= 0 === subio ? '➡️' : '↩️', previa >= 0 === subio ? 'js.pq_tendencia_sigue' : 'js.pq_tendencia_gira',
+                { previa: pct(previa), dir: C.t(previa >= 0 ? 'js.sb_subiendo' : 'js.sb_bajando') });
+        }
+
+        // 4. ¿Fue un movimiento grande para esta moneda o simple ruido?
+        const rets = [];
+        for (let i = Math.max(1, inicio - 48); i <= inicio; i++) rets.push(serie[i] / serie[i - 1] - 1);
+        if (rets.length >= 10) {
+            const m = media(rets);
+            const tipico = Math.sqrt(media(rets.map(x => (x - m) ** 2))) * Math.sqrt(fin - inicio) * 100;
+            if (tipico > 0) {
+                const veces = Math.abs(cambio) / tipico;
+                if (veces >= 2) agregar('💥', 'js.pq_fuerte', { veces: C.numero(veces, 1), tipico: C.numero(tipico, 1) });
+                else if (veces < 0.6) agregar('〰️', 'js.pq_ruido', { tipico: C.numero(tipico, 1) });
+            }
+        }
+
+        // 5. El camino: subió y bajó por el medio antes de terminar donde terminó.
+        if (subio && valle <= -Math.max(1.5, Math.abs(cambio) * 0.6)) agregar('🎢', 'js.pq_camino_sube', { valle: pct(valle) });
+        else if (!subio && pico >= Math.max(1.5, Math.abs(cambio) * 0.6)) agregar('🎢', 'js.pq_camino_baja', { pico: pct(pico) });
+
+        if (!razones.length) agregar('➖', 'js.pq_sin_razon');
+        return { cambio, subio, razones };
+    }
+
+    /**
+     * Para los juegos con la semana de CoinGecko (sparkline): qué hizo Bitcoin y cuántas monedas se
+     * movieron en la misma dirección entre los mismos dos puntos. Las series se alinean por el final
+     * (todas terminan en el mismo momento).
+     */
+    function contextoSemana(m, monedas, inicio, fin) {
+        const tramo = x => {
+            const off = x.sparkline.length - m.sparkline.length;
+            const a = x.sparkline[inicio + off], b = x.sparkline[fin + off];
+            return a > 0 && b > 0 ? (b / a - 1) * 100 : null;
+        };
+        const propio = tramo(m);
+        const btc = monedas.find(x => x.id === 'bitcoin');
+        const otras = monedas.filter(x => x.id !== m.id && x.sparkline && !(x.analisis && x.analisis.es_stablecoin)).map(tramo).filter(v => v !== null);
+        return {
+            referencia: btc && btc.id !== m.id && tramo(btc) !== null ? { nombre: 'Bitcoin', cambio: tramo(btc) } : null,
+            amplitud: propio === null ? null : { mismo: otras.filter(v => (v >= 0) === (propio >= 0)).length, total: otras.length },
+        };
+    }
+
+    /** Caja HTML "¿Por qué subió / bajó?" para un resultado de porQueSeMovio. */
+    function htmlPorQue(res, simbolo, maxRazones = 5) {
+        if (!res) return '';
+        const lista = res.razones.slice(0, maxRazones).map(([i, texto]) => `<li><span aria-hidden="true">${i}</span><span>${texto}</span></li>`).join('');
+        return `<div class="porque ${res.subio ? 'sube' : 'baja'}">
+            <h4>${res.subio ? '📈' : '📉'} ${C.t(res.subio ? 'js.pq_titulo_sube' : 'js.pq_titulo_baja', { simbolo: C.escapar(simbolo), cambio: pct(res.cambio, 2) })}</h4>
+            <ul class="coach-razones">${lista}</ul>
+            <p class="nota">ℹ️ ${C.t('js.pq_nota')}</p></div>`;
+    }
+
     // ---------- Explicación con IA generativa (Claude), si el servidor la tiene ----------
 
     /** Devuelve el texto de Claude o lanza un Error (el juego sigue con el análisis local). */
@@ -240,6 +351,6 @@
 
     window.Coach = {
         analizar, prediccion, tamano, tarjeta, plan, registrar, textoStats, preguntarClaude, resumen, botonClaude, pct,
-        explicarCompra, explicarVenta, textoAccion,
+        explicarCompra, explicarVenta, textoAccion, porQueSeMovio, htmlPorQue, contextoSemana,
     };
 })();

@@ -109,6 +109,10 @@
             previa: C.porcentaje(previa),
             direccion: C.t(previa >= 0 ? 'js.sb_subiendo' : 'js.sb_bajando'),
         });
+        // ¿Por qué subió o bajó? Con Bitcoin y el resto de monedas en esas mismas ~12 h.
+        const porQue = window.Coach.porQueSeMovio({
+            serie: m.sparkline, inicio: corte, fin: corte + FUTURO, ...window.Coach.contextoSemana(m, monedas, corte, corte + FUTURO),
+        });
         const stats = C.leer('subebaja_stats', { rondas: 0, aciertos: 0, tendencia: 0 });
         stats.rondas++;
         if (acierto) stats.aciertos++;
@@ -118,7 +122,7 @@
         $('sb-resultado').innerHTML = `<div class="resultado-ronda ${acierto ? 'acierto' : 'fallo'}">
             ${acierto ? '✔ ' + C.t('js.sb_acierto') : '✖ ' + C.t('js.sb_fallo')}<br>
             <span style="font-weight:500">${C.t('js.sb_cambio', { simbolo: m.symbol.toUpperCase() })} ${C.porcentaje(cambio)}</span></div>
-            <p class="explicacion-ronda">📖 ${explicacion}</p>
+            ${porQue ? window.Coach.htmlPorQue(porQue, m.symbol.toUpperCase()) : `<p class="explicacion-ronda">📖 ${explicacion}</p>`}
             ${textoIa ? `<p class="explicacion-ronda">${textoIa}</p>` : ''}`;
         dibujar(true);
         pintarHud();
