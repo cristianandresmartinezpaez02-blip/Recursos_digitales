@@ -170,7 +170,7 @@ return [
 
     // ---------- Favoritas y alertas ----------
     'fav.explicacion' => 'Pulsa la ★ junto a cualquier moneda (en el Top 100, en su ficha o en el buscador) para guardarla aquí. Se guardan en este navegador.',
-    'alertas.explicacion' => 'Elige una moneda y un precio. Cuando se alcance te mostraremos un aviso (y una notificación si la permites). Las alertas se revisan cada minuto mientras tengas abierta cualquier página del sitio.',
+    'alertas.explicacion' => 'Elige una moneda y un precio. Cuando se alcance te mostraremos un aviso. Si activas los avisos en tu celular (arriba), te llegará la notificación aunque tengas la página cerrada.',
     'alertas.nueva' => 'Nueva alerta',
     'alertas.condicion' => 'Avisarme cuando',
     'alertas.mayor' => 'suba a o por encima de',
@@ -1628,4 +1628,27 @@ return [
     'coach.limite' => 'Pediste muchas explicaciones seguidas. Espera unos minutos.',
     'coach.error' => 'La IA no pudo responder ahora. Usa el análisis de arriba, que siempre funciona.',
     'coach.off' => 'La explicación con IA generativa no está activada en este servidor.',
+
+    // Avisos push en el celular (includes/panel_push.php, assets/js/push.js)
+    'push.titulo' => 'Avisos en tu celular',
+    'push.explicacion' => 'Recibe una notificación cuando una de tus favoritas suba o baje mucho, o cuando se cumpla una de tus alertas, aunque tengas la página cerrada. Los precios se revisan cada 10 minutos.',
+    'push.umbral' => 'Avisarme cuando una favorita se mueva',
+    'push.umbral_op' => '{pct} % o más',
+    'push.activar' => 'Activar en este dispositivo',
+    'push.desactivar' => 'Desactivar',
+    'push.probar' => 'Enviar aviso de prueba',
+    'push.estado_apagado' => 'Desactivados',
+    'push.ios' => 'En iPhone: abre esta página en Safari, pulsa Compartir → «Añadir a pantalla de inicio», abre la app desde el icono y activa aquí los avisos.',
+    'push.prueba' => '¡Listo! Así te llegarán los avisos de tus criptos favoritas.',
+    'js.push_estado_activo' => '✔ Activados',
+    'js.push_estado_apagado' => 'Desactivados',
+    'js.push_activadas' => '✔ Avisos activados. Te escribiremos cuando una favorita suba o baje {pct} % o más.',
+    'js.push_desactivadas' => 'Avisos desactivados en este dispositivo.',
+    'js.push_umbral_guardado' => '✔ Ahora te avisaremos con movimientos de {pct} % o más.',
+    'js.push_prueba_enviada' => '📨 Aviso de prueba enviado. Debería llegarte en unos segundos.',
+    'js.push_bloqueadas' => 'Las notificaciones están bloqueadas para esta página. Actívalas en los ajustes del navegador (icono del candado junto a la dirección) y vuelve a intentarlo.',
+    'js.push_no_soportado' => 'Este navegador no admite notificaciones push. Prueba con Chrome, Edge, Firefox o Safari.',
+    'js.push_ios_instalar' => 'En iPhone primero tienes que añadir la página a la pantalla de inicio (mira las instrucciones de abajo).',
+    'js.push_sin_cuenta' => 'Inicia sesión para activar los avisos.',
+    'js.push_error' => 'No se pudieron activar los avisos. Inténtalo de nuevo en un momento.',
 ];

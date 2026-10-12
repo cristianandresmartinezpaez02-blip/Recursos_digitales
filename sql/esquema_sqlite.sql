@@ -55,3 +55,24 @@ CREATE INDEX IF NOT EXISTS idx_actividad_accion_fecha ON actividad (accion, fech
 -- v2: inicio de sesión con Hotmail / Outlook (cuenta Microsoft).
 ALTER TABLE usuarios ADD COLUMN microsoft_sub TEXT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_microsoft_sub ON usuarios (microsoft_sub);
+
+-- v3: notificaciones push al celular (includes/push.php y api/avisos.php).
+CREATE TABLE IF NOT EXISTS push_suscripciones (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    endpoint    TEXT NOT NULL UNIQUE,
+    p256dh      TEXT NOT NULL,
+    auth        TEXT NOT NULL,
+    idioma      TEXT NOT NULL DEFAULT 'es',
+    umbral      INTEGER NOT NULL DEFAULT 5,
+    creado      TEXT NOT NULL DEFAULT (NOW())
+);
+CREATE INDEX IF NOT EXISTS idx_push_usuario ON push_suscripciones (usuario_id);
+
+CREATE TABLE IF NOT EXISTS push_avisos (
+    usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    clave       TEXT NOT NULL,
+    precio_ref  REAL NOT NULL,
+    fecha       TEXT NOT NULL DEFAULT (NOW()),
+    PRIMARY KEY (usuario_id, clave)
+);

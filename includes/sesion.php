@@ -20,7 +20,9 @@ const CLAVES_PROTEGIDAS = [
 /** Claves de localStorage que se guardan en la cuenta del usuario. */
 const CLAVES_PROGRESO = ['minitrading_v1', 'reto_records', 'subebaja_record', 'subebaja_stats', 'coach_stats', 'favoritos', 'alertas', 'diario_trading'];
 
-if (session_status() === PHP_SESSION_NONE) {
+// SIN_SESION: tareas automáticas (api/avisos.php, que llama cron-job.org cada 10 min) no abren
+// sesión; si no, cada llamada dejaría una sesión vacía guardada en la base.
+if (session_status() === PHP_SESSION_NONE && !defined('SIN_SESION')) {
     if (esPostgres()) {
         // En la nube las sesiones van a la base: así nadie queda desconectado cuando el servidor se reinicia.
         // Si la base no responde, se usan archivos (la página sigue funcionando).

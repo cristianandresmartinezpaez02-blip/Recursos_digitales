@@ -286,3 +286,7 @@
 .lista-ops-reto { display: grid; gap: .4rem; margin: .5rem 0 0; padding: 0; list-style: none; text-align: left; }
 .lista-ops-reto li { font-size: .85rem; padding: .5rem .7rem; border-radius: 10px; background: var(--fondo-2); }
 .ia-prediccion { margin-top: .75rem; }
+
+/* Avisos push en el celular (includes/panel_push.php) */
+.panel-push .chip.activa { border-color: var(--sube); color: var(--sube); }
+.panel-push .form-linea { margin-top: .75rem; }

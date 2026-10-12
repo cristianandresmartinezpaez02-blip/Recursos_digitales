@@ -60,11 +60,13 @@ Para que abra rápido siempre (también desde el celular), un servicio gratuito 
 1. Entra en <https://cron-job.org> → **Sign up** (gratis) y confirma tu correo.
 2. **Create cronjob**:
    - **Title**: `CriptoAnalisis despierta`
-   - **URL**: `https://criptoanalisis.onrender.com/offline.html` (con tu link)
+   - **URL**: `https://criptoanalisis.onrender.com/api/avisos.php` (con tu link)
    - **Execution schedule**: *Every 10 minutes*
 3. **Create**.
 
-Así no se gasta el cupo de CoinGecko (visita una página sin precios) y Render lo permite: un solo servicio encendido todo el mes cabe en las 750 horas gratis.
+Esa dirección mantiene despierto el servidor y, además, revisa los precios para los **avisos en el celular** (notificaciones push de favoritas y alertas, ver *Favoritas → Avisos en tu celular*). Si nadie ha activado los avisos, no pide precios y no gasta el cupo de CoinGecko. Render lo permite: un solo servicio encendido todo el mes cabe en las 750 horas gratis.
+
+Las claves de las notificaciones (VAPID) se crean solas y se guardan en la base de datos: no hay que configurar nada. En iPhone los avisos solo funcionan si el usuario añade la página a la pantalla de inicio (Safari → Compartir → *Añadir a pantalla de inicio*).
 
 ### Paso 2b. Base de datos gratuita para que las cuentas no se borren (Supabase)
 

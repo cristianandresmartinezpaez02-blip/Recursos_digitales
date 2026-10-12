@@ -15,6 +15,8 @@ require __DIR__ . '/../includes/header.php';
 
 <div class="explicacion"><span class="ico">ℹ️</span><p><?= e(t('fav.explicacion')) ?></p></div>
 
+<?php require __DIR__ . '/../includes/panel_push.php'; ?>
+
 <section id="favoritas" class="tarjetas-favoritas">
     <div class="tarjeta-favorita esqueleto" style="height:190px"></div>
     <div class="tarjeta-favorita esqueleto" style="height:190px"></div>
@@ -22,5 +24,5 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <?php
-$scripts = [url('assets/js/app.js'), url('assets/js/favoritas.js')];
+$scripts = [url('assets/js/app.js'), url('assets/js/favoritas.js'), url('assets/js/push.js')];
 require __DIR__ . '/../includes/footer.php';

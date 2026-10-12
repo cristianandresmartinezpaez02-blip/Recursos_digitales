@@ -69,3 +69,27 @@ UPDATE usuarios SET metodo_registro = 'facial' WHERE descriptor_facial IS NOT NU
 -- v4: inicio de sesión con Hotmail / Outlook (cuenta Microsoft).
 ALTER TABLE usuarios ADD COLUMN microsoft_sub VARCHAR(64) NULL AFTER apple_sub;
 ALTER TABLE usuarios ADD UNIQUE INDEX idx_microsoft_sub (microsoft_sub);
+
+-- v5: notificaciones push al celular (includes/push.php y api/avisos.php).
+CREATE TABLE IF NOT EXISTS push_suscripciones (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id  INT UNSIGNED NOT NULL,
+    endpoint    VARCHAR(700) NOT NULL,
+    p256dh      VARCHAR(120) NOT NULL,
+    auth        VARCHAR(40)  NOT NULL,
+    idioma      VARCHAR(5)   NOT NULL DEFAULT 'es',
+    umbral      INT NOT NULL DEFAULT 5,
+    creado      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE INDEX idx_endpoint (endpoint),
+    INDEX idx_push_usuario (usuario_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS push_avisos (
+    usuario_id  INT UNSIGNED NOT NULL,
+    clave       VARCHAR(80) NOT NULL,
+    precio_ref  DOUBLE NOT NULL,
+    fecha       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (usuario_id, clave),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

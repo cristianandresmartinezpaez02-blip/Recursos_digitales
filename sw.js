@@ -2,7 +2,7 @@
    - Páginas: primero la red (datos al día); si no hay conexión, la última copia o offline.html.
    - CSS, JS, imágenes y librerías de CDN: primero la caché (llevan ?v=… y cambian de URL al actualizarse).
    - api/: siempre la red (precios y cuentas nunca se guardan aquí). */
-const VERSION = 'cripto-v3';
+const VERSION = 'cripto-v4';
 const BASE = new URL('./', self.location).pathname; // carpeta donde está sw.js (sirve en XAMPP y en un hosting)
 
 self.addEventListener('install', ev => {
@@ -35,4 +35,29 @@ self.addEventListener('fetch', ev => {
             return r;
         })));
     }
+});
+
+// ---------- Notificaciones push (api/avisos.php) ----------
+// Llegan aunque la página esté cerrada. Al tocarla se abre la moneda (o se reutiliza una pestaña abierta).
+self.addEventListener('push', ev => {
+    let aviso = {};
+    try { aviso = ev.data ? ev.data.json() : {}; } catch (e) { aviso = { cuerpo: ev.data && ev.data.text() }; }
+    ev.waitUntil(self.registration.showNotification(aviso.titulo || 'CriptoAnálisis', {
+        body: aviso.cuerpo || '',
+        icon: aviso.icono || BASE + 'assets/img/icono.svg',
+        badge: BASE + 'assets/img/icono.svg',
+        tag: aviso.etiqueta || undefined,   // un aviso nuevo de la misma moneda reemplaza al anterior
+        renotify: !!aviso.etiqueta,
+        data: { url: aviso.url || BASE },
+    }));
+});
+
+self.addEventListener('notificationclick', ev => {
+    ev.notification.close();
+    const destino = new URL(ev.notification.data && ev.notification.data.url || BASE, self.location.origin).href;
+    ev.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ventanas => {
+        const abierta = ventanas.find(v => v.url.startsWith(self.location.origin));
+        if (abierta) return abierta.navigate(destino).then(v => (v || abierta).focus()).catch(() => self.clients.openWindow(destino));
+        return self.clients.openWindow(destino);
+    }));
 });

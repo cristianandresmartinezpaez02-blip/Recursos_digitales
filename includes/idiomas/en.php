@@ -170,7 +170,7 @@ return [
 
     // ---------- Favorites & alerts ----------
     'fav.explicacion' => 'Click the ★ next to any coin (in the Top 100, on its page or in the search) to save it here. They’re stored in this browser.',
-    'alertas.explicacion' => 'Pick a coin and a price. When it’s reached we’ll show a notice (and a notification if you allow it). Alerts are checked every minute while any page of the site is open.',
+    'alertas.explicacion' => 'Pick a coin and a price. When it’s reached we’ll show a notice. If you turn on phone alerts (above), the notification arrives even when the page is closed.',
     'alertas.nueva' => 'New alert',
     'alertas.condicion' => 'Notify me when it',
     'alertas.mayor' => 'rises to or above',
@@ -1485,4 +1485,27 @@ return [
     'coach.limite' => 'You asked for many explanations in a row. Wait a few minutes.',
     'coach.error' => 'The AI could not answer right now. Use the analysis above, which always works.',
     'coach.off' => 'Generative AI explanations are not enabled on this server.',
+
+    // Avisos push en el celular (includes/panel_push.php, assets/js/push.js)
+    'push.titulo' => 'Alerts on your phone',
+    'push.explicacion' => 'Get a notification when one of your favorites rises or falls sharply, or when one of your price alerts is hit, even with the page closed. Prices are checked every 10 minutes.',
+    'push.umbral' => 'Notify me when a favorite moves',
+    'push.umbral_op' => '{pct}% or more',
+    'push.activar' => 'Turn on for this device',
+    'push.desactivar' => 'Turn off',
+    'push.probar' => 'Send a test alert',
+    'push.estado_apagado' => 'Off',
+    'push.ios' => 'On iPhone: open this page in Safari, tap Share → “Add to Home Screen”, open the app from the icon and turn on alerts here.',
+    'push.prueba' => 'All set! This is how alerts about your favorite coins will look.',
+    'js.push_estado_activo' => '✔ On',
+    'js.push_estado_apagado' => 'Off',
+    'js.push_activadas' => '✔ Alerts on. We’ll notify you when a favorite rises or falls {pct}% or more.',
+    'js.push_desactivadas' => 'Alerts turned off on this device.',
+    'js.push_umbral_guardado' => '✔ We’ll now notify you of moves of {pct}% or more.',
+    'js.push_prueba_enviada' => '📨 Test alert sent. It should arrive in a few seconds.',
+    'js.push_bloqueadas' => 'Notifications are blocked for this page. Allow them in your browser settings (lock icon next to the address) and try again.',
+    'js.push_no_soportado' => 'This browser doesn’t support push notifications. Try Chrome, Edge, Firefox or Safari.',
+    'js.push_ios_instalar' => 'On iPhone you first need to add the page to your Home Screen (see the instructions below).',
+    'js.push_sin_cuenta' => 'Sign in to turn on alerts.',
+    'js.push_error' => 'Alerts could not be turned on. Please try again in a moment.',
 ];

@@ -66,3 +66,27 @@ CREATE TABLE IF NOT EXISTS cache_datos (
     clave      TEXT PRIMARY KEY,
     contenido  TEXT NOT NULL
 );
+
+-- v4: notificaciones push al celular (includes/push.php y api/avisos.php).
+-- Un navegador/celular suscrito por fila; umbral = % de subida o bajada que avisa.
+CREATE TABLE IF NOT EXISTS push_suscripciones (
+    id          SERIAL PRIMARY KEY,
+    usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    endpoint    TEXT NOT NULL UNIQUE,
+    p256dh      TEXT NOT NULL,
+    auth        TEXT NOT NULL,
+    idioma      TEXT NOT NULL DEFAULT 'es',
+    umbral      INTEGER NOT NULL DEFAULT 5,
+    creado      TIMESTAMP(0) NOT NULL DEFAULT LOCALTIMESTAMP(0)
+);
+CREATE INDEX IF NOT EXISTS idx_push_usuario ON push_suscripciones (usuario_id);
+
+-- Precio con el que se avisó por última vez de cada favorita (clave = id de la moneda)
+-- o alerta ya avisada (clave = "alerta:<id>"): así no se repite el mismo aviso.
+CREATE TABLE IF NOT EXISTS push_avisos (
+    usuario_id  INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    clave       TEXT NOT NULL,
+    precio_ref  DOUBLE PRECISION NOT NULL,
+    fecha       TIMESTAMP(0) NOT NULL DEFAULT LOCALTIMESTAMP(0),
+    PRIMARY KEY (usuario_id, clave)
+);

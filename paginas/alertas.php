@@ -32,6 +32,8 @@ require __DIR__ . '/../includes/header.php';
     <p class="nota"><button class="boton secundario mini" id="permiso-notif" type="button" hidden>🔔 <?= e(t('alertas.permitir')) ?></button></p>
 </section>
 
+<?php require __DIR__ . '/../includes/panel_push.php'; ?>
+
 <section class="panel">
     <div class="panel-cabecera">
         <h2><?= e(t('alertas.mis_alertas')) ?></h2>
@@ -41,5 +43,5 @@ require __DIR__ . '/../includes/header.php';
 </section>
 
 <?php
-$scripts = [url('assets/js/app.js'), url('assets/js/alertas.js')];
+$scripts = [url('assets/js/app.js'), url('assets/js/alertas.js'), url('assets/js/push.js')];
 require __DIR__ . '/../includes/footer.php';
