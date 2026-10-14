@@ -1025,6 +1025,7 @@ return [
     'js.expr_fearful' => 'Afraid',
     'js.expr_disgusted' => 'Disgusted',
     'meta.descripcion' => 'Live crypto market, technical analysis (RSI, MACD, moving averages), scanner, trading journal, calculators and risk-free practice games.',
+    'meta.titulo_inicio' => 'Live cryptocurrency analysis, charts and trading',
     'nav.arriba' => 'Back to top',
     'nav.escaner' => 'Technical scanner',
     'nav.escaner_d' => 'RSI, MACD, crossovers and volatility of the top 100.',

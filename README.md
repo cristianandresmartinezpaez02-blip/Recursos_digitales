@@ -138,6 +138,21 @@ El Coach IA funciona siempre, gratis, en el navegador de cada jugador. Si ademá
 
 Solo pueden usarlo personas con sesión iniciada, con un límite de 12 explicaciones cada 10 minutos.
 
+### Paso 6. Aparecer en Google (y en Bing)
+
+La página ya trae lo que piden los buscadores: `robots.txt`, `sitemap.xml` (lista de páginas), título y descripción, link canónico y el nombre del sitio («CriptoAnálisis», también sin tilde). Falta avisarle a Google:
+
+1. Entra en <https://search.google.com/search-console> con tu cuenta de Gmail → **Añadir propiedad** → elige **Prefijo de la URL** y pega `https://criptoanalisis.onrender.com/`.
+2. En los métodos de verificación abre **Etiqueta HTML**. Copia solo el código que va dentro de `content="…"`.
+3. En Render → **Environment** crea la variable `GOOGLE_SITE_VERIFICATION` con ese código y guarda (Render vuelve a publicar solo, unos 3 minutos).
+4. Vuelve a Search Console y pulsa **Verificar**.
+5. Menú **Sitemaps** → escribe `sitemap.xml` → **Enviar**.
+6. Menú **Inspección de URLs** → pega `https://criptoanalisis.onrender.com/` → **Solicitar indexación**.
+
+Google tarda de unos días a un par de semanas en mostrarla. Para comprobarlo busca `site:criptoanalisis.onrender.com`. Para Bing (y DuckDuckGo/Yahoo, que usan sus resultados) entra en <https://www.bing.com/webmasters> → **Importar desde Google Search Console**.
+
+> Que salga **de primera** al buscar solo «criptoanalisis» depende de la competencia (la palabra también significa descifrar códigos). Ayuda mucho compartir el link en redes, en tu perfil de GitHub y en otros sitios, y tener un dominio propio (p. ej. `criptoanalisis.com.co`).
+
 ### Actualizar la página después
 
 Cada vez que cambies algo en tu PC:

@@ -2,8 +2,8 @@
 DirectoryIndex index.php
 Options -Indexes
 
-# Archivos que nunca deben verse desde el navegador.
-<FilesMatch "\.(sql|md|txt|bat|py|zip|log|ejemplo\.php)$">
+# Archivos que nunca deben verse desde el navegador (salvo robots.txt, que leen los buscadores).
+<FilesMatch "^(?!robots\.txt$).*\.(sql|md|txt|bat|py|zip|log|ejemplo\.php)$">
     Require all denied
 </FilesMatch>
 
@@ -11,6 +11,10 @@ Options -Indexes
     RewriteEngine On
     # Carpetas internas (configuración, datos, código compartido, copias para publicar).
     RewriteRule ^(config|data|includes|sql|publicar|quizpy)(/|$) - [F,L]
+
+    # Buscadores (Google, Bing…): robots.txt y sitemap.xml se generan con el dominio real.
+    RewriteRule ^robots\.txt$ robots.php [L]
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
     # Forzar https (candado). Actívalo quitando el "#" de las 4 líneas de abajo SOLO cuando
     # tu hosting ya tenga el certificado SSL instalado (si no, la página dejaría de abrir).

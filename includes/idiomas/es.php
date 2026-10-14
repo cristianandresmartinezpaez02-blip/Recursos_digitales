@@ -1025,6 +1025,7 @@ return [
     'js.expr_fearful' => 'Miedo',
     'js.expr_disgusted' => 'Desagrado',
     'meta.descripcion' => 'Mercado cripto en vivo, análisis técnico (RSI, MACD, medias), escáner, diario de trading, calculadoras y juegos para practicar sin riesgo.',
+    'meta.titulo_inicio' => 'Análisis de criptomonedas en vivo, gráficos y trading',
     'nav.arriba' => 'Volver arriba',
     'nav.escaner' => 'Escáner técnico',
     'nav.escaner_d' => 'RSI, MACD, cruces y volatilidad del top 100.',

@@ -11,6 +11,7 @@ require_once __DIR__ . '/sesion.php';
 require_once __DIR__ . '/menu.php';
 require_once __DIR__ . '/idiomas_mundo.php';
 require_once __DIR__ . '/ia.php';
+require_once __DIR__ . '/seo.php';
 
 $titulo = $titulo ?? APP_NOMBRE;
 $activa = $activa ?? '';
@@ -94,8 +95,31 @@ $inicial = $usuario ? mb_strtoupper(mb_substr($usuario['nombre'], 0, 1)) : '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title><?= e($titulo) ?> · <?= e(APP_NOMBRE) ?></title>
+    <title><?= $activa === 'inicio' ? e(APP_NOMBRE . ' · ' . t('meta.titulo_inicio')) : e($titulo) . ' · ' . e(APP_NOMBRE) ?></title>
     <meta name="description" content="<?= e(t('meta.descripcion')) ?>">
+    <!-- Buscadores y vista previa al compartir el link (WhatsApp, Facebook, X…) -->
+    <link rel="canonical" href="<?= e(urlCanonica()) ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<?= e(APP_NOMBRE) ?>">
+    <meta property="og:title" content="<?= e($activa === 'inicio' ? APP_NOMBRE : $titulo . ' · ' . APP_NOMBRE) ?>">
+    <meta property="og:description" content="<?= e(t('meta.descripcion')) ?>">
+    <meta property="og:url" content="<?= e(urlCanonica()) ?>">
+    <meta property="og:locale" content="<?= e(str_replace('-', '_', LOCALES[idioma()] ?? 'es')) ?>">
+<?php if (GOOGLE_SITE_VERIFICATION !== ''): ?>
+    <meta name="google-site-verification" content="<?= e(GOOGLE_SITE_VERIFICATION) ?>">
+<?php endif; ?>
+<?php if ($activa === 'inicio'): ?>
+    <!-- Nombre del sitio para Google (también si lo buscan sin tilde: «criptoanalisis») -->
+    <script type="application/ld+json"><?= json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => APP_NOMBRE,
+        'alternateName' => ['Criptoanalisis', 'Cripto Análisis', 'CriptoAnalisis'],
+        'url' => urlPublica(),
+        'description' => t('meta.descripcion'),
+        'inLanguage' => ['es', 'en', 'fr'],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
+<?php endif; ?>
     <meta name="theme-color" content="#7c3aed">
     <link rel="icon" href="<?= url('assets/img/icono.svg') ?>" type="image/svg+xml">
     <link rel="apple-touch-icon" href="<?= url('assets/img/icono.svg') ?>">

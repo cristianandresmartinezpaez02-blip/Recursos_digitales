@@ -1025,6 +1025,7 @@ return [
     'js.expr_fearful' => 'Effrayé',
     'js.expr_disgusted' => 'Dégoûté',
     'meta.descripcion' => 'Marché crypto en direct, analyse technique (RSI, MACD, moyennes), scanner, journal de trading, calculatrices et jeux pour s\'entraîner sans risque.',
+    'meta.titulo_inicio' => 'Analyse des cryptomonnaies en direct, graphiques et trading',
     'nav.arriba' => 'Retour en haut',
     'nav.escaner' => 'Scanner technique',
     'nav.escaner_d' => 'RSI, MACD, croisements et volatilité du top 100.',

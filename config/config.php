@@ -14,7 +14,7 @@ if (is_file(__DIR__ . '/config.local.php')) {
 
 // En un servidor en la nube (Render, Railway, Docker…) las claves se ponen como variables de
 // entorno en su panel, nunca en el código que se sube a GitHub. Mandan sobre los valores de abajo.
-foreach (['COINGECKO_API_KEY', 'ADMIN_PASSWORD', 'GOOGLE_CLIENT_ID', 'APPLE_CLIENT_ID', 'MICROSOFT_CLIENT_ID', 'ANTHROPIC_API_KEY', 'DATABASE_URL'] as $variableEntorno) {
+foreach (['COINGECKO_API_KEY', 'ADMIN_PASSWORD', 'GOOGLE_CLIENT_ID', 'APPLE_CLIENT_ID', 'MICROSOFT_CLIENT_ID', 'ANTHROPIC_API_KEY', 'DATABASE_URL', 'GOOGLE_SITE_VERIFICATION'] as $variableEntorno) {
     if (!defined($variableEntorno) && (string) getenv($variableEntorno) !== '') {
         define($variableEntorno, (string) getenv($variableEntorno));
     }
@@ -116,6 +116,10 @@ define('CACHE_DIVISAS_VIVO_SEG', 300); // divisas principales en vivo (Yahoo)
 defined('GOOGLE_CLIENT_ID') || define('GOOGLE_CLIENT_ID', ''); // xxxx.apps.googleusercontent.com
 defined('APPLE_CLIENT_ID') || define('APPLE_CLIENT_ID', '');   // Services ID, p. ej. com.misitio.web
 defined('MICROSOFT_CLIENT_ID') || define('MICROSOFT_CLIENT_ID', ''); // Hotmail: ID de aplicación de Azure
+
+// Google Search Console (para que la página salga en Google): método «Etiqueta HTML»,
+// solo el valor de content="…". Ver README.md → «Aparecer en Google».
+defined('GOOGLE_SITE_VERIFICATION') || define('GOOGLE_SITE_VERIFICATION', '');
 
 date_default_timezone_set(ZONA_HORARIA);
 

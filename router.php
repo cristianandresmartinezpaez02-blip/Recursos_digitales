@@ -6,6 +6,14 @@
  */
 $ruta = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
 
+// Buscadores: robots.txt y sitemap.xml se generan con el dominio real (igual que en .htaccess).
+if ($ruta === '/robots.txt' || $ruta === '/sitemap.xml') {
+    $_SERVER['SCRIPT_NAME'] = $ruta === '/robots.txt' ? '/robots.php' : '/sitemap.php';
+    $_SERVER['SCRIPT_FILENAME'] = __DIR__ . $_SERVER['SCRIPT_NAME'];
+    require $_SERVER['SCRIPT_FILENAME'];
+    return true;
+}
+
 if (preg_match('#^/(config|data|includes|sql|publicar|quizpy|php)(/|$)#i', $ruta)
     || preg_match('#/\.|\.(sql|sqlite|md|txt|bat|py|zip|log)$#i', $ruta)) {
     http_response_code(403);

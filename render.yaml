@@ -24,6 +24,9 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Código de Google Search Console (Etiqueta HTML) para aparecer en Google (README.md, paso 6).
+      - key: GOOGLE_SITE_VERIFICATION
+        sync: false
       # Base de datos PostgreSQL gratuita (Supabase, ver README.md). En el plan gratis de Render
       # el disco se borra en cada publicación: con esta variable las cuentas, el progreso y los
       # ajustes se guardan en Supabase y no se pierden. Sin ella se usa un archivo SQLite temporal.
