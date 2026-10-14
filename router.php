@@ -15,7 +15,7 @@ if ($ruta === '/robots.txt' || $ruta === '/sitemap.xml') {
 }
 
 if (preg_match('#^/(config|data|includes|sql|publicar|quizpy|php)(/|$)#i', $ruta)
-    || preg_match('#/\.|\.(sql|sqlite|md|txt|bat|py|zip|log)$#i', $ruta)) {
+    || (preg_match('#/\.|\.(sql|sqlite|md|txt|bat|py|zip|log)$#i', $ruta) && !preg_match('#^/[0-9a-f]{32}\.txt$#', $ruta))) {
     http_response_code(403);
     exit('403 · Acceso denegado');
 }

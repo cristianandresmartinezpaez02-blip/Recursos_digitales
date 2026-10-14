@@ -1,5 +1,7 @@
 # CriptoAnálisis
 
+🌐 **Página en vivo: <https://criptoanalisis.onrender.com>**
+
 Análisis de criptomonedas y acciones en tiempo real, con juegos de inversión (dinero ficticio) y un **Coach IA** que explica cada decisión.
 
 - **Juegos**: Reto 7 días, ¿Sube o baja? y Trading en vivo.
@@ -150,6 +152,16 @@ La página ya trae lo que piden los buscadores: `robots.txt`, `sitemap.xml` (lis
 6. Menú **Inspección de URLs** → pega `https://criptoanalisis.onrender.com/` → **Solicitar indexación**.
 
 Google tarda de unos días a un par de semanas en mostrarla. Para comprobarlo busca `site:criptoanalisis.onrender.com`. Para Bing (y DuckDuckGo/Yahoo, que usan sus resultados) entra en <https://www.bing.com/webmasters> → **Importar desde Google Search Console**.
+
+**IndexNow** (Bing, Yandex, Seznam…): el archivo `e7eb3a358680f42502f57702be0b72c2.txt` es la clave; no lo borres. Después de publicar páginas nuevas, avísales con:
+
+```bash
+curl -s https://criptoanalisis.onrender.com/sitemap.xml | grep -o '<loc>[^<]*' | sed 's/<loc>//' \
+  | awk 'BEGIN{printf "{\"host\":\"criptoanalisis.onrender.com\",\"key\":\"e7eb3a358680f42502f57702be0b72c2\",\"urlList\":["} {printf "%s\"%s\"", (NR>1?",":""), $0} END{print "]}"}' \
+  | curl -s -w "%{http_code}\n" -H "Content-Type: application/json; charset=utf-8" -d @- https://api.indexnow.org/indexnow
+```
+
+Responde `200` o `202` si lo recibieron.
 
 > Que salga **de primera** al buscar solo «criptoanalisis» depende de la competencia (la palabra también significa descifrar códigos). Ayuda mucho compartir el link en redes, en tu perfil de GitHub y en otros sitios, y tener un dominio propio (p. ej. `criptoanalisis.com.co`).
 

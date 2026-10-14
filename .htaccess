@@ -2,8 +2,8 @@
 DirectoryIndex index.php
 Options -Indexes
 
-# Archivos que nunca deben verse desde el navegador (salvo robots.txt, que leen los buscadores).
-<FilesMatch "^(?!robots\.txt$).*\.(sql|md|txt|bat|py|zip|log|ejemplo\.php)$">
+# Archivos que nunca deben verse desde el navegador (salvo robots.txt y la clave de IndexNow, que leen los buscadores).
+<FilesMatch "^(?!robots\.txt$|[0-9a-f]{32}\.txt$).*\.(sql|md|txt|bat|py|zip|log|ejemplo\.php)$">
     Require all denied
 </FilesMatch>
 
