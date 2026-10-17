@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "php": ">=8.1",
-        "anthropic-ai/sdk": "^0.57"
+        "anthropic-ai/sdk": "^0.58"
     },
     "config": {
         "sort-packages": true
