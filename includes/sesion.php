@@ -123,9 +123,7 @@ function registroAbierto(): bool
 
 function facialActivo(): bool
 {
-    // Apagado si el administrador no lo activó: el descriptor del rostro se calcula en el navegador,
-    // así que con el correo y una foto de la persona se podía suplantar su acceso.
-    return (bool) ajuste('facial_activo', false);
+    return (bool) ajuste('facial_activo', true);
 }
 
 /**
