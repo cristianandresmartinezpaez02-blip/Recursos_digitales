@@ -8,5 +8,5 @@ require_once __DIR__ . '/../includes/bolsa.php';
 try {
     responderJson(obtenerDivisas());
 } catch (Throwable $e) {
-    responderJson(['error' => $e->getMessage()], 503);
+    fallarApi($e);
 }

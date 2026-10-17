@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../includes/api.php';
 
 $id = strtolower(trim($_GET['id'] ?? ''));
-if (!preg_match('/^[a-z0-9\-]+$/', $id)) {
+if (!categoriaPermitida($id)) {
     responderJson(['error' => 'Categoría inválida'], 400);
 }
 
@@ -14,5 +14,5 @@ try {
     $res = obtenerMonedasCategoria($id);
     responderJson(['actualizado' => $res['fecha'], 'monedas' => $res['datos']]);
 } catch (Throwable $e) {
-    responderJson(['error' => $e->getMessage()], 503);
+    fallarApi($e);
 }

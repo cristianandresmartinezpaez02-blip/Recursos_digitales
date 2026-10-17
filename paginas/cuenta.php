@@ -89,6 +89,28 @@ $u = usuarioActual();
         </div>
         <div class="consejo-juego"><span>☁️</span><span><?= e(t('cuenta.sincronizado')) ?></span></div>
     </div>
+
+    <div class="panel" id="seguridad">
+        <h2>🔐 <?= e(t('cuenta.seguridad')) ?></h2>
+        <p class="texto-2"><?= e(t('cuenta.seguridad_d')) ?></p>
+        <button class="boton secundario" type="button" id="cerrar-otras">📱 <?= e(t('cuenta.cerrar_otras')) ?></button>
+
+        <h3 style="margin-top:1.5rem">🗑 <?= e(t('cuenta.eliminar')) ?></h3>
+        <p class="texto-2"><?= e(t('cuenta.eliminar_d')) ?></p>
+        <form id="form-eliminar" class="form-cuenta" autocomplete="off">
+            <?php if ($u['tiene_clave']): ?>
+            <label class="campo-form"><?= e(t('cuenta.confirma_password')) ?>
+                <input type="password" id="eliminar-password" autocomplete="current-password" required>
+            </label>
+            <?php else: ?>
+            <label class="campo-form"><?= e(t('cuenta.confirma_email')) ?>
+                <input type="email" id="eliminar-email" autocomplete="off" required placeholder="<?= e($u['email']) ?>">
+            </label>
+            <?php endif; ?>
+            <button class="boton peligro" type="submit">🗑 <?= e(t('cuenta.eliminar')) ?></button>
+            <p class="mensaje" id="eliminar-mensaje" role="alert"></p>
+        </form>
+    </div>
 </section>
 
 <?php

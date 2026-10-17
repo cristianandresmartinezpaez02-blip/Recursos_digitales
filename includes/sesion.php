@@ -58,15 +58,17 @@ function usuarioActual(): ?array
         return null;
     }
     try {
-        $st = db()->prepare("SELECT id, nombre, email, rol, activo, metodo_registro, password_hash <> '' AS tiene_clave, descriptor_facial IS NOT NULL AS tiene_rostro, facial_fecha, creado FROM usuarios WHERE id = ?");
+        $st = db()->prepare("SELECT id, nombre, email, rol, activo, metodo_registro, password_hash <> '' AS tiene_clave, descriptor_facial IS NOT NULL AS tiene_rostro, facial_fecha, creado, sesion_version FROM usuarios WHERE id = ?");
         $st->execute([$_SESSION['usuario_id']]);
         $fila = $st->fetch();
     } catch (Throwable $e) {
         error_log('usuarioActual: ' . $e->getMessage());
         return null;
     }
-    if (!$fila || !$fila['activo']) {
-        unset($_SESSION['usuario_id']); // la cuenta ya no existe o fue suspendida
+    // La cuenta ya no existe, fue suspendida o el usuario cerró la sesión en todos los dispositivos
+    // (sesion_version subió: las sesiones abiertas antes guardan el número viejo).
+    if (!$fila || !$fila['activo'] || (int) ($_SESSION['sesion_version'] ?? 0) !== (int) $fila['sesion_version']) {
+        unset($_SESSION['usuario_id'], $_SESSION['sesion_version']);
         return null;
     }
     $fila['tiene_rostro'] = (bool) $fila['tiene_rostro'];
@@ -121,7 +123,33 @@ function registroAbierto(): bool
 
 function facialActivo(): bool
 {
-    return (bool) ajuste('facial_activo', true);
+    // Apagado si el administrador no lo activó: el descriptor del rostro se calcula en el navegador,
+    // así que con el correo y una foto de la persona se podía suplantar su acceso.
+    return (bool) ajuste('facial_activo', false);
+}
+
+/**
+ * IP real del visitante. En Render (y detrás de cualquier proxy) REMOTE_ADDR es la IP interna del
+ * balanceador, la misma para todos: los límites "por IP" bloquearían a todo el mundo a la vez.
+ *  - Con Cloudflare y ORIGEN_SECRETO (ver config.php): CF-Connecting-IP.
+ *  - Detrás de un proxy (REMOTE_ADDR privada): la última IP de X-Forwarded-For, que la añade el
+ *    proxy; las anteriores las puede inventar el visitante.
+ */
+function ipCliente(): string
+{
+    $remota = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    if (defined('ORIGEN_VERIFICADO') && ORIGEN_VERIFICADO && filter_var($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '', FILTER_VALIDATE_IP)) {
+        return substr($_SERVER['HTTP_CF_CONNECTING_IP'], 0, 45);
+    }
+    $esPrivada = !filter_var($remota, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    if ($esPrivada && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $partes = array_map('trim', explode(',', (string) $_SERVER['HTTP_X_FORWARDED_FOR']));
+        $ultima = end($partes);
+        if (filter_var($ultima, FILTER_VALIDATE_IP)) {
+            return substr($ultima, 0, 45);
+        }
+    }
+    return substr($remota, 0, 45);
 }
 
 /** Deja constancia de lo que pasa en la cuenta (inicios de sesión, cambios del administrador…). */
@@ -129,7 +157,7 @@ function registrarActividad(string $accion, string $detalle = '', ?int $usuarioI
 {
     try {
         db()->prepare('INSERT INTO actividad (usuario_id, accion, detalle, ip) VALUES (?, ?, ?, ?)')
-            ->execute([$usuarioId, $accion, mb_substr($detalle, 0, 255), substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45)]);
+            ->execute([$usuarioId, $accion, mb_substr($detalle, 0, 255), ipCliente()]);
     } catch (Throwable $e) {
         error_log('actividad: ' . $e->getMessage());
     }
@@ -138,14 +166,27 @@ function registrarActividad(string $accion, string $detalle = '', ?int $usuarioI
 function iniciarSesionUsuario(int $id): void
 {
     session_regenerate_id(true);
+    $st = db()->prepare('SELECT sesion_version FROM usuarios WHERE id = ?');
+    $st->execute([$id]);
     $_SESSION['usuario_id'] = $id;
+    $_SESSION['sesion_version'] = (int) $st->fetchColumn();
     db()->prepare('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?')->execute([$id]);
 }
 
 function cerrarSesionUsuario(): void
 {
-    unset($_SESSION['usuario_id']);
+    unset($_SESSION['usuario_id'], $_SESSION['sesion_version']);
     session_regenerate_id(true);
+}
+
+/** Invalida todas las sesiones abiertas de la cuenta; la actual sigue conectada. */
+function cerrarOtrasSesiones(int $id): void
+{
+    db()->prepare('UPDATE usuarios SET sesion_version = sesion_version + 1 WHERE id = ?')->execute([$id]);
+    $st = db()->prepare('SELECT sesion_version FROM usuarios WHERE id = ?');
+    $st->execute([$id]);
+    session_regenerate_id(true);
+    $_SESSION['sesion_version'] = (int) $st->fetchColumn();
 }
 
 function csrfToken(): string

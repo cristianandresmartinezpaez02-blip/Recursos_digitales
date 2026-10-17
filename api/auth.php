@@ -122,11 +122,41 @@ function distanciaEuclidiana(array $a, array $b): float
     return sqrt($suma);
 }
 
-// ---------- Límite de intentos ----------
+// ---------- Límite de intentos (ipCliente() está en includes/sesion.php) ----------
 
-function ipCliente(): string
+/** Cuentas creadas desde una misma IP en la última hora (frena la creación masiva de cuentas). */
+function demasiadosRegistros(): bool
 {
-    return substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, 45);
+    $st = db()->prepare("SELECT COUNT(*) FROM actividad WHERE accion = 'registro' AND fecha > ? AND ip = ?");
+    $st->execute([fechaHace(3600), ipCliente()]);
+    return (int) $st->fetchColumn() >= 5;
+}
+
+/**
+ * Cloudflare Turnstile (captcha gratis, sin dominio propio): solo si TURNSTILE_SECRET está definida.
+ * Si Cloudflare no responde se deja pasar: los límites por IP siguen protegiendo el registro.
+ */
+function turnstileValido(string $token): bool
+{
+    if (TURNSTILE_SECRET === '') {
+        return true;
+    }
+    if ($token === '' || strlen($token) > 2048) {
+        return false;
+    }
+    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query(['secret' => TURNSTILE_SECRET, 'response' => $token, 'remoteip' => ipCliente()]),
+    ]);
+    $cuerpo = curl_exec($ch);
+    $codigo = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($cuerpo === false || $codigo >= 500) {
+        error_log('Turnstile sin respuesta (HTTP ' . $codigo . '): se deja pasar');
+        return true;
+    }
+    return (json_decode((string) $cuerpo, true)['success'] ?? false) === true;
 }
 
 function bloqueado(string $email): bool
@@ -185,6 +215,8 @@ try {
     switch ($accion) {
         case 'registro':
             if (!registroAbierto()) fallar('cuenta.err_registro_cerrado', 403);
+            if (demasiadosRegistros()) fallar('cuenta.err_muchos_registros', 429);
+            if (!turnstileValido((string) ($entrada['turnstile'] ?? ''))) fallar('cuenta.err_captcha', 400);
             $nombre = trim((string) ($entrada['nombre'] ?? ''));
             $email = emailValido($entrada['email'] ?? '');
             $password = (string) ($entrada['password'] ?? '');
@@ -277,6 +309,7 @@ try {
             if (!$u) {
                 if (!registroAbierto()) fallar('cuenta.err_registro_cerrado', 403);
                 if (!$email || !$verificado) fallar('cuenta.err_oauth_email', 400);
+                if (demasiadosRegistros()) fallar('cuenta.err_muchos_registros', 429);
                 // Apple solo envía el nombre la primera vez (desde el navegador, no dentro del token).
                 $nombre = trim((string) ($datos['name'] ?? ($entrada['nombre'] ?? '')));
                 if (mb_strlen($nombre) < 2) $nombre = ucfirst(explode('@', $email)[0]);
@@ -308,6 +341,38 @@ try {
             if (!$descriptores) fallar('cuenta.err_rostro');
             db()->prepare('UPDATE usuarios SET descriptor_facial = ?, facial_fecha = NOW() WHERE id = ?')->execute([json_encode($descriptores), $actual['id']]);
             registrarActividad('rostro', 'registrado', (int) $actual['id']);
+            responder(['ok' => true]);
+
+        case 'cerrar_otras':
+            $actual = usuarioActual();
+            if (!$actual) fallar('cuenta.err_sin_sesion', 401);
+            cerrarOtrasSesiones((int) $actual['id']);
+            registrarActividad('cerrar_otras', '', (int) $actual['id']);
+            responder(['ok' => true]);
+
+        case 'eliminar_cuenta':
+            // Lo exigen Google Play y App Store: el usuario puede borrar su cuenta él mismo.
+            $actual = usuarioActual();
+            if (!$actual) fallar('cuenta.err_sin_sesion', 401);
+            $id = (int) $actual['id'];
+            $st = db()->prepare('SELECT password_hash FROM usuarios WHERE id = ?');
+            $st->execute([$id]);
+            $hashActual = (string) $st->fetchColumn();
+            // Con contraseña: la contraseña. Cuentas de Google/Apple/Microsoft: escribir su correo.
+            if ($hashActual !== '' ? !password_verify((string) ($entrada['password'] ?? ''), $hashActual)
+                    : emailValido($entrada['confirmacion'] ?? '') !== $actual['email']) {
+                fallar($hashActual !== '' ? 'cuenta.err_password_actual' : 'cuenta.err_confirmacion', 401);
+            }
+            if ($actual['rol'] === 'admin' && (int) db()->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'admin'")->fetchColumn() <= 1) {
+                fallar('cuenta.err_unico_admin', 409);
+            }
+            // progreso, push_suscripciones y push_avisos se borran solos (ON DELETE CASCADE);
+            // la actividad queda sin dueño (solo para estadísticas y seguridad).
+            db()->prepare('UPDATE actividad SET usuario_id = NULL WHERE usuario_id = ?')->execute([$id]);
+            db()->prepare('DELETE FROM progreso WHERE usuario_id = ?')->execute([$id]); // MySQL/SQLite antiguos sin cascada
+            db()->prepare('DELETE FROM usuarios WHERE id = ?')->execute([$id]);
+            registrarActividad('cuenta_eliminada', 'por el usuario');
+            cerrarSesionUsuario();
             responder(['ok' => true]);
 
         case 'logout':

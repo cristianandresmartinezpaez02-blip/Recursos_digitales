@@ -23,7 +23,13 @@ RUN apt-get update \
  # El https lo pone el proxy de la nube: así PHP sabe que la conexión es segura (cookies "secure").
  && echo 'SetEnvIf X-Forwarded-Proto "^https$" HTTPS=on' > /etc/apache2/conf-enabled/proxy-https.conf \
  && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
- && echo 'date.timezone = America/Bogota' > "$PHP_INI_DIR/conf.d/zona.ini"
+ && echo 'date.timezone = America/Bogota' > "$PHP_INI_DIR/conf.d/zona.ini" \
+ # Seguridad: no anunciar versiones de Apache/PHP, peticiones de como mucho 3 MB (el progreso
+ # de los juegos es lo más grande que se envía) y cortar a quien envía las cabeceras muy despacio
+ # (slowloris: con 8 procesos bastaría con 8 conexiones lentas para tumbar la página).
+ && printf 'expose_php = Off\npost_max_size = 3M\nupload_max_filesize = 1M\nmax_execution_time = 30\n' > "$PHP_INI_DIR/conf.d/seguridad.ini" \
+ && printf 'ServerTokens Prod\nServerSignature Off\nTraceEnable Off\nLimitRequestBody 3145728\nTimeout 30\nKeepAliveTimeout 3\n' > /etc/apache2/conf-enabled/zz-seguridad.conf \
+ && a2enmod reqtimeout
 
 ENV PORT=80
 WORKDIR /var/www/html

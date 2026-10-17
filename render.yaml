@@ -7,7 +7,8 @@ services:
     runtime: docker
     plan: free
     autoDeploy: true
-    healthCheckPath: /index.php
+    # Liviano: no llama a APIs externas (index.php sí, y gastaba cupo de CoinGecko en cada chequeo).
+    healthCheckPath: /api/salud.php
     envVars:
       # Contraseña para crear el primer administrador: Render inventa una segura
       # (la ves en el panel de Render → Environment).
@@ -31,4 +32,13 @@ services:
       # el disco se borra en cada publicación: con esta variable las cuentas, el progreso y los
       # ajustes se guardan en Supabase y no se pierden. Sin ella se usa un archivo SQLite temporal.
       - key: DATABASE_URL
+        sync: false
+      # Solo cuando la página ya esté detrás de Cloudflare con dominio propio (ver config/config.php):
+      # el mismo valor que pone la regla de Cloudflare en la cabecera X-Origen-Secreto.
+      - key: ORIGEN_SECRETO
+        sync: false
+      # Captcha de Cloudflare Turnstile en "Crear cuenta" (gratis, funciona con …onrender.com).
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: TURNSTILE_SECRET
         sync: false

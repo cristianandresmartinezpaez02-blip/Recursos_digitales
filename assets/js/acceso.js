@@ -166,6 +166,7 @@
             nombre: f.nombre.value.trim(),
             email: f.email.value.trim(),
             password: f.password.value,
+            turnstile: f.querySelector('[name="cf-turnstile-response"]')?.value || '', // captcha (si está activo)
         };
         if (datos.nombre.length < 2) return mensaje('registro-mensaje', C.t('js.cuenta_err_nombre'));
         if (!/^\S+@\S+\.\S+$/.test(datos.email)) return mensaje('registro-mensaje', C.t('js.cuenta_err_email'));
@@ -186,6 +187,7 @@
         } catch (e) {
             mensaje('registro-mensaje', e.message);
             boton.disabled = false;
+            if (window.turnstile) turnstile.reset(); // cada respuesta del captcha sirve una sola vez
         }
     });
 })();

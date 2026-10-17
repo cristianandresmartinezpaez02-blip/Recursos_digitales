@@ -93,3 +93,6 @@ CREATE TABLE IF NOT EXISTS push_avisos (
     PRIMARY KEY (usuario_id, clave),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- v6: "Cerrar sesión en los demás dispositivos" (includes/sesion.php).
+ALTER TABLE usuarios ADD COLUMN sesion_version INT UNSIGNED NOT NULL DEFAULT 0;

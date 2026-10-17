@@ -60,7 +60,7 @@ function db(): PDO
     ];
     if (esSqlite()) {
         if (!is_file(DB_ARCHIVO)) {
-            @unlink(DIR_DATA . '/.esquema_sqlite_v3'); // archivo nuevo (o borrado): hay que crear las tablas
+            @unlink(DIR_DATA . '/.esquema_sqlite_v4'); // archivo nuevo (o borrado): hay que crear las tablas
         }
         $pdo = new PDO('sqlite:' . DB_ARCHIVO, null, null, $opciones);
         // Funciones de MySQL que usa el proyecto, con la hora de la zona de config.php.
@@ -70,7 +70,7 @@ function db(): PDO
         $pdo->exec('PRAGMA foreign_keys = ON');
         $pdo->exec('PRAGMA journal_mode = WAL');   // lecturas y escrituras a la vez sin bloquearse
         $pdo->exec('PRAGMA busy_timeout = 5000');
-        crearTablas($pdo, 'esquema_sqlite.sql', DIR_DATA . '/.esquema_sqlite_v3'); // cambia el número al modificar el esquema
+        crearTablas($pdo, 'esquema_sqlite.sql', DIR_DATA . '/.esquema_sqlite_v4'); // cambia el número al modificar el esquema
         return $pdo;
     }
     if (esPostgres()) {
@@ -81,7 +81,7 @@ function db(): PDO
         }
         try {
             $conexion = conexionPostgres($opciones);
-            crearTablas($conexion, 'esquema_pgsql.sql', DIR_DATA . '/.esquema_pgsql_v4'); // todo es "IF NOT EXISTS": repetirlo no hace daño
+            crearTablas($conexion, 'esquema_pgsql.sql', DIR_DATA . '/.esquema_pgsql_v5'); // todo es "IF NOT EXISTS": repetirlo no hace daño
         } catch (Throwable $e) {
             throw $fallo = $e;
         }
@@ -98,7 +98,7 @@ function db(): PDO
         $pdo->exec('CREATE DATABASE IF NOT EXISTS `' . DB_NOMBRE . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
         $pdo->exec('USE `' . DB_NOMBRE . '`');
     }
-    crearTablas($pdo, 'esquema.sql', DIR_DATA . '/.esquema_v5'); // cambia el número al modificar sql/esquema.sql
+    crearTablas($pdo, 'esquema.sql', DIR_DATA . '/.esquema_v6'); // cambia el número al modificar sql/esquema.sql
     return $pdo;
 }
 

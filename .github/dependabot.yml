@@ -1,0 +1,16 @@
+# Dependabot (GitHub): avisa y abre un pull request cuando una librería tiene una versión nueva o
+# una vulnerabilidad conocida. Composer = SDK de Anthropic; docker = imagen php:8.3-apache.
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: "/quizpy"
+    schedule:
+      interval: weekly

@@ -90,3 +90,7 @@ CREATE TABLE IF NOT EXISTS push_avisos (
     fecha       TIMESTAMP(0) NOT NULL DEFAULT LOCALTIMESTAMP(0),
     PRIMARY KEY (usuario_id, clave)
 );
+
+-- v5: "Cerrar sesión en los demás dispositivos" (includes/sesion.php): al subir este número,
+-- toda sesión abierta con el número anterior deja de valer.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sesion_version INTEGER NOT NULL DEFAULT 0;

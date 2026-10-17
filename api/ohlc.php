@@ -8,12 +8,15 @@ require_once __DIR__ . '/../includes/api.php';
 $id = strtolower(trim($_GET['id'] ?? ''));
 $dias = (int) ($_GET['dias'] ?? 1);
 
-if (!preg_match('/^[a-z0-9\-]+$/', $id) || !in_array($dias, RANGOS_HISTORIAL, true)) {
+if (!in_array($dias, RANGOS_HISTORIAL, true)) {
     responderJson(['error' => 'Parámetros inválidos'], 400);
+}
+if (!monedaPermitida($id)) {
+    responderJson(['error' => 'Moneda no disponible'], 404);
 }
 
 try {
     responderJson(['id' => $id, 'dias' => $dias, 'velas' => obtenerOhlc($id, $dias)]);
 } catch (Throwable $e) {
-    responderJson(['error' => $e->getMessage()], 503);
+    fallarApi($e);
 }

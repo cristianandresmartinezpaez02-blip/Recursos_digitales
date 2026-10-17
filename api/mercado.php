@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/api.php';
 try {
     $res = obtenerTop100();
 } catch (Throwable $e) {
-    responderJson(['error' => 'No se pudieron obtener los precios: ' . $e->getMessage()], 503);
+    fallarApi($e, 'No se pudieron obtener los precios.');
 }
 
 $monedas = $res['datos'];

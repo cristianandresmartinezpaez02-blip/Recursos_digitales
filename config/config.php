@@ -14,12 +14,23 @@ if (is_file(__DIR__ . '/config.local.php')) {
 
 // En un servidor en la nube (Render, Railway, Docker…) las claves se ponen como variables de
 // entorno en su panel, nunca en el código que se sube a GitHub. Mandan sobre los valores de abajo.
-foreach (['COINGECKO_API_KEY', 'ADMIN_PASSWORD', 'GOOGLE_CLIENT_ID', 'APPLE_CLIENT_ID', 'MICROSOFT_CLIENT_ID', 'ANTHROPIC_API_KEY', 'DATABASE_URL', 'GOOGLE_SITE_VERIFICATION'] as $variableEntorno) {
+foreach (['COINGECKO_API_KEY', 'ADMIN_PASSWORD', 'GOOGLE_CLIENT_ID', 'APPLE_CLIENT_ID', 'MICROSOFT_CLIENT_ID', 'ANTHROPIC_API_KEY', 'DATABASE_URL', 'GOOGLE_SITE_VERIFICATION', 'ORIGEN_SECRETO', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET'] as $variableEntorno) {
     if (!defined($variableEntorno) && (string) getenv($variableEntorno) !== '') {
         define($variableEntorno, (string) getenv($variableEntorno));
     }
 }
 unset($variableEntorno);
+
+// Solo tráfico que pasó por Cloudflare. Una regla de Cloudflare (Reglas → Transformar → Modificar
+// encabezado de solicitud) añade "X-Origen-Secreto: <ORIGEN_SECRETO>" a cada visita; quien llame
+// directo a https://….onrender.com (saltándose el WAF y la caché) recibe 403. Vacío = desactivado.
+// api/salud.php queda libre: lo usa el health check de Render, que no pasa por Cloudflare.
+defined('ORIGEN_SECRETO') || define('ORIGEN_SECRETO', '');
+define('ORIGEN_VERIFICADO', ORIGEN_SECRETO !== '' && hash_equals(ORIGEN_SECRETO, (string) ($_SERVER['HTTP_X_ORIGEN_SECRETO'] ?? '')));
+if (ORIGEN_SECRETO !== '' && !ORIGEN_VERIFICADO && PHP_SAPI !== 'cli' && !defined('PERMITIR_SIN_CLOUDFLARE')) {
+    http_response_code(403);
+    exit('403');
+}
 
 // Ruta base del proyecto (para construir enlaces). Se detecta sola comparando el archivo
 // que se ejecuta con la URL pedida: "" si la página está en la raíz del dominio
@@ -116,6 +127,11 @@ define('CACHE_DIVISAS_VIVO_SEG', 300); // divisas principales en vivo (Yahoo)
 defined('GOOGLE_CLIENT_ID') || define('GOOGLE_CLIENT_ID', ''); // xxxx.apps.googleusercontent.com
 defined('APPLE_CLIENT_ID') || define('APPLE_CLIENT_ID', '');   // Services ID, p. ej. com.misitio.web
 defined('MICROSOFT_CLIENT_ID') || define('MICROSOFT_CLIENT_ID', ''); // Hotmail: ID de aplicación de Azure
+
+// Captcha de Cloudflare Turnstile en "Crear cuenta" (gratis y sin dominio propio: funciona con
+// …onrender.com). Se crean en dash.cloudflare.com → Turnstile. Vacías = sin captcha.
+defined('TURNSTILE_SITE_KEY') || define('TURNSTILE_SITE_KEY', ''); // pública: va en la página
+defined('TURNSTILE_SECRET') || define('TURNSTILE_SECRET', '');     // secreta: solo en el servidor
 
 // Google Search Console (para que la página salga en Google): método «Etiqueta HTML»,
 // solo el valor de content="…". Ver README.md → «Aparecer en Google».

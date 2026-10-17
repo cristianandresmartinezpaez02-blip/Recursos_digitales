@@ -65,6 +65,37 @@
         }
     });
 
+    // ---------- Seguridad: otras sesiones y eliminar la cuenta ----------
+
+    $('cerrar-otras').addEventListener('click', async ev => {
+        const boton = ev.currentTarget;
+        boton.disabled = true;
+        try {
+            await C.api('auth.php?accion=cerrar_otras');
+            C.toast('📱 ' + C.t('js.cuenta_otras_cerradas'), 'exito');
+        } catch (e) {
+            C.toast(e.message, 'alerta');
+        }
+        boton.disabled = false;
+    });
+
+    $('form-eliminar').addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const caja = $('eliminar-mensaje');
+        const datos = $('eliminar-password') ? { password: $('eliminar-password').value } : { confirmacion: $('eliminar-email').value.trim() };
+        if (!(datos.password || datos.confirmacion) || !confirm(C.t('js.cuenta_confirmar_eliminar'))) return;
+        try {
+            await C.api('auth.php?accion=eliminar_cuenta', datos);
+            // El progreso guardado en este navegador también se borra.
+            try { localStorage.clear(); } catch (e) { /* almacenamiento bloqueado */ }
+            C.toast(C.t('js.cuenta_eliminada'), 'exito');
+            setTimeout(() => { location.href = `${APP.base}/index.php`; }, 1200);
+        } catch (e) {
+            caja.textContent = e.message;
+            caja.className = 'mensaje alerta';
+        }
+    });
+
     addEventListener('pagehide', () => Facial.detener());
     if (!$('rostro-guardar').disabled) Facial.precargar(); // modelos listos antes de pulsar el botón
 })();

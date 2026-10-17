@@ -27,4 +27,15 @@ Options -Indexes
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Nadie puede meter la página en un <iframe> de otro sitio (clickjacking), ni cargar plugins
+    # (<object>), ni cambiar la base de los enlaces relativos (<base>).
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+    # Cámara solo para esta página (acceso facial); micrófono, ubicación, pagos y USB, para nadie.
+    Header always set Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+    Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+    # HSTS: el navegador recuerda usar siempre https. Solo se envía si la visita ya llegó por https
+    # (variable HTTPS del Dockerfile), así XAMPP en http://localhost no se ve afectado.
+    Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+    Header always unset X-Powered-By
 </IfModule>

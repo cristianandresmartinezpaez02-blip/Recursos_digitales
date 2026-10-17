@@ -31,10 +31,14 @@ if (!iaClaudeActiva()) {
     responder(503, ['ok' => false, 'error' => t('coach.off')]);
 }
 
-// Como mucho 12 explicaciones cada 10 minutos por sesión.
-$ahora = time();
-$_SESSION['coach_ia'] = array_values(array_filter($_SESSION['coach_ia'] ?? [], fn($t) => $t > $ahora - 600));
-if (count($_SESSION['coach_ia']) >= 12) {
+// Como mucho 12 explicaciones cada 10 minutos y 60 al día por CUENTA (no por sesión: con una
+// sesión nueva el límite volvía a cero y cada pregunta cuesta dinero en la API).
+$idUsuario = (int) usuarioActual()['id'];
+$st = db()->prepare("SELECT SUM(CASE WHEN fecha > ? THEN 1 ELSE 0 END) AS recientes, COUNT(*) AS hoy
+    FROM actividad WHERE accion = 'coach_ia' AND usuario_id = ? AND fecha > ?");
+$st->execute([fechaHace(600), $idUsuario, fechaHace(86400)]);
+$uso = $st->fetch();
+if ((int) $uso['recientes'] >= 12 || (int) $uso['hoy'] >= 60) {
     responder(429, ['ok' => false, 'error' => t('coach.limite')]);
 }
 
@@ -107,7 +111,7 @@ try {
     responder(502, ['ok' => false, 'error' => t('coach.error')]);
 }
 
-$_SESSION['coach_ia'][] = $ahora;
+registrarActividad('coach_ia', '', $idUsuario);
 
 if ($mensaje->stopReason === 'refusal') {
     responder(502, ['ok' => false, 'error' => t('coach.error')]);

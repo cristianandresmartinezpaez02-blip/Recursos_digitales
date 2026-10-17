@@ -468,6 +468,42 @@ function mercadoRespaldo(): array
     }, $tickers);
 }
 
+/**
+ * ¿El id es una moneda del top 100? Los endpoints solo piden a CoinGecko/Binance datos de esas
+ * monedas: con ids inventados cada petición se saltaba la caché y gastaba el cupo de la API
+ * (30/min, 10.000/mes), y bastaba un script para dejar a todo el sitio sin datos.
+ */
+function monedaPermitida(string $id): bool
+{
+    if (strlen($id) > 100 || !preg_match('/^[a-z0-9\-]+$/', $id)) {
+        return false;
+    }
+    try {
+        return buscarEnTop100($id) !== null;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+function categoriaPermitida(string $id): bool
+{
+    if (strlen($id) > 100 || !preg_match('/^[a-z0-9\-]+$/', $id)) {
+        return false;
+    }
+    try {
+        return in_array($id, array_column(obtenerCategorias()['datos'], 'id'), true);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/** Error de un endpoint: el detalle va al log del servidor, nunca al visitante. */
+function fallarApi(Throwable $e, string $mensaje = 'Datos no disponibles por ahora. Intenta en un minuto.'): void
+{
+    error_log(basename($_SERVER['SCRIPT_NAME'] ?? 'api') . ': ' . $e->getMessage());
+    responderJson(['error' => $mensaje], 503);
+}
+
 function buscarEnTop100(string $id): ?array
 {
     foreach (obtenerTop100()['datos'] as $m) {

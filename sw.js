@@ -1,8 +1,10 @@
 /* Service worker: permite instalar la página como app y verla sin conexión.
    - Páginas: primero la red (datos al día); si no hay conexión, la última copia o offline.html.
    - CSS, JS, imágenes y librerías de CDN: primero la caché (llevan ?v=… y cambian de URL al actualizarse).
-   - api/: siempre la red (precios y cuentas nunca se guardan aquí). */
-const VERSION = 'cripto-v4';
+   - api/: siempre la red. Excepción: los datos PÚBLICOS de mercado (API_SIN_CONEXION) se guardan
+     para mostrar los últimos precios sin conexión. Nada de cuentas, progreso ni avisos. */
+const VERSION = 'cripto-v5';
+const API_SIN_CONEXION = ['api/mercado.php', 'api/extras.php', 'api/divisas.php'];
 const BASE = new URL('./', self.location).pathname; // carpeta donde está sw.js (sirve en XAMPP y en un hosting)
 
 self.addEventListener('install', ev => {
@@ -17,6 +19,14 @@ self.addEventListener('fetch', ev => {
     const pedido = ev.request;
     if (pedido.method !== 'GET') return;
     const url = new URL(pedido.url);
+    // Precios públicos: primero la red; sin conexión, la última respuesta guardada.
+    if (url.origin === location.origin && !url.search && API_SIN_CONEXION.some(r => url.pathname === BASE + r)) {
+        ev.respondWith(fetch(pedido).then(r => {
+            if (r.ok) { const copia = r.clone(); caches.open(VERSION).then(c => c.put(pedido, copia)); }
+            return r;
+        }).catch(() => caches.match(pedido).then(r => r || Response.error())));
+        return;
+    }
     if (url.origin === location.origin && (url.pathname.includes('/api/') || url.pathname.includes('/admin/'))) return;
 
     if (pedido.mode === 'navigate') {

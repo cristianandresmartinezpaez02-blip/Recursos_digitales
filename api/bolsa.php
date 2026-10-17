@@ -20,5 +20,5 @@ try {
     }
     responderJson(obtenerBolsa());
 } catch (Throwable $e) {
-    responderJson(['error' => 'No se pudieron obtener los datos de bolsa: ' . $e->getMessage()], 503);
+    fallarApi($e, 'No se pudieron obtener los datos de bolsa.');
 }

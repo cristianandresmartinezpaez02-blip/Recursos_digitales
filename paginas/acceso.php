@@ -157,6 +157,9 @@ $beneficios = [
                 </fieldset>
                 <?php endif; ?>
 
+                <?php if (TURNSTILE_SITE_KEY !== ''): /* captcha de Cloudflare (config.php) */ ?>
+                <div class="cf-turnstile" data-sitekey="<?= e(TURNSTILE_SITE_KEY) ?>" data-language="<?= e(idioma()) ?>" data-theme="auto"></div>
+                <?php endif; ?>
                 <button class="boton bloque" type="submit" id="registro-enviar">✨ <?= e(t('cuenta.crear')) ?></button>
                 <p class="mensaje" id="registro-mensaje" role="alert"></p>
             </form>
@@ -184,4 +187,5 @@ $scripts = [url('assets/js/app.js'), url('assets/js/facial.js'), url('assets/js/
 if ($oauthGoogle) $scripts[] = 'https://accounts.google.com/gsi/client';
 if ($oauthApple) $scripts[] = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/' . ['es' => 'es_ES', 'en' => 'en_US', 'fr' => 'fr_FR'][idioma()] . '/appleid.auth.js';
 $scripts[] = url('assets/js/acceso-social.js');
+if (TURNSTILE_SITE_KEY !== '' && $registroAbierto) $scripts[] = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 require __DIR__ . '/../includes/footer.php';
