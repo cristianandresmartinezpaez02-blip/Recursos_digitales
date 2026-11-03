@@ -1,6 +1,6 @@
 # Imagen para publicar CriptoAnálisis en internet (Render, Railway, Fly.io o cualquier
 # servidor con Docker). Guía paso a paso: README.md
-FROM php:8.3-apache
+FROM php:8.5-apache
 
 # unzip: lo usa Composer. pdo_pgsql (+ libpq-dev): base PostgreSQL en la nube (DATABASE_URL).
 # pdo_mysql: por si algún día se usa MySQL. opcache: PHP guarda el código ya compilado en memoria
